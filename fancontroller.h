@@ -22,6 +22,9 @@
 	#define RCLK PORTD3
 	#define OE PORTD4
 
+	#define REFRESHPORT PORTD
+	#define REFRESH PORTD7
+
 	#define FAN1CONN 0
 	#define FAN2CONN 1
 	#define FAN3CONN 2

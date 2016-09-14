@@ -14,6 +14,9 @@ uint16_t fan5CurrentMaxSpeed = 0;
 
 uint8_t connectedFans = 0;
 
+//tracking value of Timer0 to use as timer for LED display as well
+uint8_t timer0Tracker = 0;
+
 uint8_t currentColour = RED;
 uint8_t	LEDColours[10][3] = {
 		  {0, 0, 0}
@@ -34,12 +37,30 @@ int main (void) {
 
 	setup();
 
-	startup();	
+	startup();
 
 	while(1){
 
+		if( timer0Tracker = TCNT0 ){
 
-	}
+			//Empty, better performance
+
+		} else {
+
+			//If Timer0 has reset, reset the tracker
+			if (timer0Tracker > TCNT0){
+				
+				timer0Tracker = TCNT0;
+			}
+
+			//Software interrupt to trigger LCD refresh
+			REFRESHPORT ^= ~(REFRESH);
+
+		} //else
+
+		
+
+	} //while
 
 }
 
@@ -67,8 +88,15 @@ void setup(void) {
 				TCCR2A |= _BV(COM2A1) | _BV(WGM20) | _BV(WGM21);
 			
 			//Enable interrupt for Timer2 overflow and half way (used for LED updates)
-				OCR2B = 128; //Half way point
-				TIMSK2 |= _BV(TOIE2) | _BV(OCIE2B); //Enable interrupts
+				//TODO -- this will probably not be used in the end
+				//OCR2B = 128; //Half way point
+				//TIMSK2 |= _BV(TOIE2) | _BV(OCIE2B); //Enable interrupts
+		//Enable interrupts to trigger LED refresh cycles
+			//Enable pin change interrupt for pin 13 / PD7 / PCINT23
+				PCICR |= _BV(PCIE2);
+				PCMSK2 |= _BV(PCINT23);
+			//Set PD7 as output
+				DDRD |= _BV(DDD7);
 
 		//Set inputs for rotary encoder - all inputs with pull-ups
 			//PB0 button, PB4 Left. PB5 Right
@@ -76,6 +104,9 @@ void setup(void) {
 			
 		//Set Outputs for shift register
 			DDRD |= _BV(DDD0) |	_BV(DDD1) |	_BV(DDD2) |	_BV(DDD3) |	_BV(DDD4);
+
+		//Disable pin 28 / PC6 by enabling internal pull-up (in input configuration)
+			PORTC |= _BV(PORTC5);
 
 		//ADC configuration
 			//ADMUX: REFS1 & REFS0 set to 0 as standard, so external AREF pin is used as reference
@@ -188,14 +219,15 @@ void checkConnection(void) {
 
 /*
 	LED refresh timout:
-		When Timer2 overflows, or reaches the half-way point, the display should be updated.
+		Software interrupt causes refresh call
+
+		depracted: When Timer2 overflows, or reaches the half-way point, the display should be updated.
 */
-ISR(TIMER2_OVF_vect){
+ISR(PCINT2_vect){
 
 	refreshDisplay();
 
 }
-ISR(TIMER2_COMPB_vect, ISR_ALIASOF(TIMER2_OVF_vect));
 
 
 
@@ -242,6 +274,6 @@ void refreshDisplay(void){
 */
 void shiftout(uint32_t input){
 
-	
-	
+
+
 }
