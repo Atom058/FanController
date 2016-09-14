@@ -183,34 +183,22 @@ $EndComp
 Wire Wire Line
 	1750 2800 2000 2800
 Wire Wire Line
-	2000 5000 1850 5000
+	1850 5000 2000 5000
 Wire Wire Line
-	1850 4000 1850 4250
-Wire Wire Line
-	1850 4250 1850 5000
-Wire Wire Line
-	1850 5000 1850 5100
-Wire Wire Line
-	1850 5100 1850 5550
-Wire Wire Line
-	1850 5550 1850 5750
+	1850 4000 1850 5750
 Wire Wire Line
 	2000 5100 1850 5100
 Connection ~ 1850 5100
 Wire Wire Line
 	850  3100 2000 3100
 Wire Wire Line
-	6000 3500 6000 4000
-Wire Wire Line
-	6000 4000 6000 4200
+	6000 3500 6000 4200
 Wire Wire Line
 	6000 4000 6200 4000
 Wire Wire Line
 	6500 4000 6700 4000
 Wire Wire Line
-	6700 3400 6700 4000
-Wire Wire Line
-	6700 4000 6700 4200
+	6700 3400 6700 4200
 Wire Wire Line
 	6700 4500 6700 4600
 Wire Wire Line
@@ -338,25 +326,12 @@ Wire Wire Line
 Wire Wire Line
 	4100 2200 4100 2300
 Wire Wire Line
-	850  2200 1450 2200
-Wire Wire Line
-	1450 2200 1750 2200
-Wire Wire Line
-	1750 2200 4100 2200
+	850  2200 4100 2200
 Connection ~ 1750 2200
 Wire Wire Line
 	4100 2600 4100 4250
 Wire Wire Line
 	4100 4250 3900 4250
-Wire Wire Line
-	3900 4150 4600 4150
-Wire Wire Line
-	4600 4150 4600 5550
-Wire Wire Line
-	4600 5550 4000 5550
-Wire Wire Line
-	4000 5550 1850 5550
-Connection ~ 1850 5550
 Wire Wire Line
 	4600 3100 7250 3100
 Wire Wire Line
@@ -405,11 +380,6 @@ Wire Wire Line
 	8550 2850 8550 3100
 Wire Wire Line
 	8550 3100 8450 3100
-Wire Wire Line
-	3900 5100 4000 5100
-Wire Wire Line
-	4000 5100 4000 5550
-Connection ~ 4000 5550
 $Comp
 L INDUCTOR_SMALL L1
 U 1 1 57D9448B
@@ -433,16 +403,12 @@ F 3 "" H 850 3450 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	850  2850 850  3100
-Wire Wire Line
-	850  3100 850  3300
+	850  2850 850  3300
 Connection ~ 850  3100
 Wire Wire Line
 	850  2350 850  2200
 Wire Wire Line
-	1750 1850 1750 2200
-Wire Wire Line
-	1750 2200 1750 2800
+	1750 1850 1750 2800
 $Comp
 L GNDREF #PWR1
 U 1 1 57D95279
@@ -485,9 +451,7 @@ Connection ~ 1450 2200
 Wire Wire Line
 	1450 4150 1350 4150
 Wire Wire Line
-	2000 3400 1850 3400
-Wire Wire Line
-	1850 3400 1450 3400
+	1450 3400 2000 3400
 Connection ~ 1450 3400
 $Comp
 L C C2
@@ -503,11 +467,12 @@ $EndComp
 Wire Wire Line
 	1450 2200 1450 2550
 Wire Wire Line
-	1450 2850 1450 3400
-Wire Wire Line
-	1450 3400 1450 4150
+	1450 2850 1450 4150
 Wire Wire Line
 	1850 3700 1850 3400
 Connection ~ 1850 3400
 Connection ~ 1850 4250
+NoConn ~ 3900 5100
+NoConn ~ 3900 4150
+NoConn ~ 1350 4350
 $EndSCHEMATC
