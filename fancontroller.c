@@ -18,7 +18,7 @@ int main (void) {
 
 	setup();
 
-	startup();
+	startup();	
 
 	while(1){
 
@@ -41,9 +41,16 @@ void setup(void) {
 			TCCR2B |= _BV(CS22) | _BV(CS21); //Timer2 Prescaler
 
 			//Set fast-PWM mode
-			TCCR0A |= _BV(COM0A1) | _BV(COM0B1) | _BV(WGM00) | _BV(WGM01); //Timer0 PWM settings
-			TCCR1A |= _BV(COM1A1) | _BV(COM1B1) | _BV(WGM10) | _BV(WGM11); //Timer1 PWM settings
-			TCCR2A |= _BV(COM2A1) | _BV(WGM20) | _BV(WGM21); //Timer2 PWM settings (only OC2A used)
+				//Timer0 PWM settings
+				TCCR0A |= _BV(COM0A1) | _BV(COM0B1) | _BV(WGM00) | _BV(WGM01); 
+				//Timer1 PWM settings - 8BIT timer mode
+				TCCR1A |= _BV(COM1A1) | _BV(COM1B1) | _BV(WGM10);
+				TCCR1B |= _BV(WGM12);
+				//Timer2 PWM settings (only OC2A used)
+				TCCR2A |= _BV(COM2A1) | _BV(WGM20) | _BV(WGM21); 
+
+			//Enable interrupt for Timer0 overflow (used for LED updates)
+				TIMSK0 |= _BV(TOIE0);
 
 		//Set inputs for rotary encoder - all inputs with pull-ups
 			//PB0 button, PB4 Left. PB5 Right
@@ -158,3 +165,4 @@ void checkConnection(void) {
 	}
 
 }
+
