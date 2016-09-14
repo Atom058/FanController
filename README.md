@@ -1,6 +1,12 @@
 #About this project
 This project aims to create a PC fan controller, based on the Arduino / Atmel frameworks.
 
+#Fuse bits
+
+Low:	0xF7
+High:	0xD8
+Ext:	0x04
+
 #Pins with input/output
 
 *) OCR0A: Fan1PWM
