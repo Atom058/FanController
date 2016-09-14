@@ -47,7 +47,7 @@ int main (void) {
 	while(1){
 
 		shiftout(count);
-		_delay_ms(1500);
+		_delay_ms(1);
 		count++;
 
 /*
@@ -290,26 +290,23 @@ void refreshDisplay(void){
 */
 void shiftout(uint8_t input){
 
-	//PORTD |= _BV(PORTD4); //OE high, Disable output
-	PORTD &= ~(_BV(PORTD4)); //OE low, Enable output
+	PORTD |= _BV(PORTD4); //OE high, Disable output
+	PORTD &= ~(_BV(PORTD3)); //RCLK low
 
 	for(uint8_t bit=0; bit<8; bit++){
 
-		PORTD &= ~(_BV(PORTD3)); //RCLK low
 		PORTD &= ~(_BV(PORTD1)); //SRCLK Low
 
 		PORTD &= ~(_BV(PORT0)); //Discards old value
 		PORTD |= (input & 1)<<PORTD0;
 		input = input>>1; //Discard leftmost bit
 
-		//PORTD &= ~(_BV(PORTD0)) || ((1)<<PORTD0);
-		//PORTD &= ((input & 1)<<PORTD0); //Check if bit is to be written, and set SER channel		
-
 		PORTD |= _BV(PORTD1); //SRCLK Rising edge, reading data into registry
-		PORTD |= _BV(PORTD3); //RCLK rising edge, loading new values in
-		_delay_ms(50);
+		//_delay_ms(50);
 
 	}
 
+	PORTD |= _BV(PORTD3); //RCLK rising edge, loading new values in
+	PORTD &= ~(_BV(PORTD4)); //OE low, Enable output
 
 }
