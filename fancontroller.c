@@ -166,3 +166,15 @@ void checkConnection(void) {
 
 }
 
+
+
+/*
+
+	LED refresh
+		When Timer0 overflows, the display should be updated.
+		This method takes care of that, by pushing data to the display through a series of shift registers.
+
+*/
+ISR(TIMER0_OVF_vect){
+
+}
