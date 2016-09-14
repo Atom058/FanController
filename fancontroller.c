@@ -41,7 +41,7 @@ int main (void) {
 
 	while(1){
 
-
+/*
 		//LED Display Ticker
 		if( timer0Tracker == TCNT0 ){
 
@@ -56,14 +56,14 @@ int main (void) {
 			}
 
 			//Software interrupt to trigger LCD refresh
-			REFRESHPORT ^= ~(REFRESH);
+			PORTD ^= ~(PORTD7);
 
 		} //else
 
 
 
 		//Rotary encoder input
-
+*/
 
 	} //while
 
@@ -109,7 +109,7 @@ void setup(void) {
 			
 		//Set Outputs for shift register
 			DDRD |= _BV(DDD0) |	_BV(DDD1) |	_BV(DDD2) |	_BV(DDD3) |	_BV(DDD4);
-			PORTB |= _BV(SRCLR) | _BV(OE); //Enable, and avoid clear!
+			PORTB |= _BV(PORTD2) | _BV(PORTD4); //Disable output, and avoid clear!
 
 		//Disable pin 28 / PC6 by enabling internal pull-up (in input configuration)
 			PORTC |= _BV(PORTC5);
@@ -135,11 +135,11 @@ void setup(void) {
 void startup(void) {
 
 	//Activate all fans on full speed
-	FAN1PWM ^= 0;
-	FAN2PWM ^= 0;
-	FAN3PWM ^= 0;
-	FAN4PWM ^= 0;
-	FAN5PWM ^= 0;
+	OCR0A ^= 0; //Fan #1
+	OCR0B ^= 0; //Fan #2
+	OCR1A ^= 0; //Fan #3
+	OCR1B ^= 0; //Fan #4
+	OCR2A ^= 0; //Fan #5
 
 	//Let fans spin to full speed
 	_delay_ms(1000); 
@@ -184,8 +184,8 @@ uint16_t readFanCurrent(uint8_t chADC) {
 	while( ADCSRA>>ADSC & 1 ); //Waits for conversion to finish
 
 	uint16_t out = 0;
-	out = ADCH<<sizeof(ADCL);
-	out |= ADCL;
+	out = ADCH<<sizeof(ADCL); //Move bit 9 & 10 to the left
+	out |= ADCL; //Store the lower 8 bits
 
 	return out;
 
@@ -280,17 +280,18 @@ void refreshDisplay(void){
 */
 void shiftout(uint32_t input){
 
-	SHIFTREG &= ~(_BV(OE)); //Disable output
+	PORTD |= _BV(PORTD4); //OE high, Disable output
+	PORTD &= ~(_BV(PORTD3)); //RCLK to low
 
 	for(int bit=0; bit<sizeof(input); bit++){
 
-		SHIFTREG &= ~(_BV(SRCLK)); //Ensure clock is low
-		SHIFTREG |= (input>>bit & 1)<<SER; //Set serial data to send
-		SHIFTREG |= _BV(SRCLK); //Rising edge, reading data
+		PORTD &= ~(_BV(PORTD1)); //SRCLK Low start with
+		PORTD |= (input>>bit & 1)<<_BV(PORTD0); //Check if bit is to be written, and set SER channel
+		PORTD |= _BV(PORTD1); //SRCLK Rising edge, reading data into registry
 
 	}
 
-	SHIFTREG |= _BV(RCLK); //Registry clock, loading new values
-	SHIFTREG |= _BV(OE); //Enable output
+	PORTD |= _BV(PORTD3); //RCLK rising edge, loading new values in
+	PORTD &= ~(_BV(PORTD4)); //OE low, Enable output
 
 }

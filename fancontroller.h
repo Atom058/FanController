@@ -11,22 +11,30 @@
 	void setup(void);
 	void startup(void);
 	void recordFanCurrents(void); 
-	uint16_t readFanCurrent(uint8_t channel);
+	uint16_t readFanCurrent(uint8_t channel);;
 	void checkConnection(void);
 	void refreshDisplay(void);
 	void shiftout(uint32_t input);
 
-	//Synonyms for shitf registry
-	#define SHIFTREG PORTD
-	#define SER PORTD0
-	#define SRCLK PORTD1
-	#define SRCLR PORTD2
-	#define RCLK PORTD3
-	#define OE PORTD4
+	//PORT LOCATIONS
+		//Shift registry
+			// Location of: SHIFTREG PORTD
+			// Location of: SER PORTD0
+			// Location of: SRCLK PORTD1
+			// Location of: SRCLR PORTD2
+			// Location of: RCLK PORTD3
+			// Location of: OE PORTD4
 
-	//Synonyms for LED refresh interrupt
-	#define REFRESHPORT PORTD
-	#define REFRESH PORTD7
+		//LED refresh interrupt
+			// Location of: REFRESHPORT PORTD
+			// Location of: REFRESHPIN PORTD7
+
+		//Fans' PWM channels
+			// Location of: FAN1PWM OCR0A;
+			// Location of: FAN2PWM OCR0B
+			// Location of: FAN3PWM OCR1A
+			// Location of: FAN4PWM OCR1B
+			// Location of: FAN5PWM OCR2A
 
 	//Storage of fan status
 	#define FAN1CONN 0
@@ -35,12 +43,6 @@
 	#define FAN4CONN 3
 	#define FAN5CONN 4
 
-	//Fans' PWM channels
-	#define FAN1PWM OCR0A
-	#define FAN2PWM OCR0B
-	#define FAN3PWM OCR1A
-	#define FAN4PWM OCR1B
-	#define FAN5PWM OCR0A
 
 	//Fans' analog channels
 	#define FAN1CH 0b00000000
