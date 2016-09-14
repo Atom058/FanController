@@ -39,7 +39,16 @@ int main (void) {
 
 	startup();
 
+	PORTD |= _BV(PORTD2); //Disable clear
+	PORTD &= ~(_BV(PORTD4)); //Enable output
+
+	uint8_t count = 0;
+
 	while(1){
+
+		shiftout(count);
+		_delay_ms(1500);
+		count++;
 
 /*
 		//LED Display Ticker
@@ -112,6 +121,7 @@ void setup(void) {
 			PORTB |= _BV(PORTD2) | _BV(PORTD4); //Disable output, and avoid clear!
 
 		//Disable pin 28 / PC6 by enabling internal pull-up (in input configuration)
+			DDRC |= _BV(DDC5);
 			PORTC |= _BV(PORTC5);
 
 		//ADC configuration
@@ -278,20 +288,28 @@ void refreshDisplay(void){
 		There is probably already 100's of examples of this code availble,
 		but I wanted to learn...
 */
-void shiftout(uint32_t input){
+void shiftout(uint8_t input){
 
-	PORTD |= _BV(PORTD4); //OE high, Disable output
-	PORTD &= ~(_BV(PORTD3)); //RCLK to low
+	//PORTD |= _BV(PORTD4); //OE high, Disable output
+	PORTD &= ~(_BV(PORTD4)); //OE low, Enable output
 
-	for(int bit=0; bit<sizeof(input); bit++){
+	for(uint8_t bit=0; bit<8; bit++){
 
-		PORTD &= ~(_BV(PORTD1)); //SRCLK Low start with
-		PORTD |= (input>>bit & 1)<<_BV(PORTD0); //Check if bit is to be written, and set SER channel
+		PORTD &= ~(_BV(PORTD3)); //RCLK low
+		PORTD &= ~(_BV(PORTD1)); //SRCLK Low
+
+		PORTD &= ~(_BV(PORT0)); //Discards old value
+		PORTD |= (input & 1)<<PORTD0;
+		input = input>>1; //Discard leftmost bit
+
+		//PORTD &= ~(_BV(PORTD0)) || ((1)<<PORTD0);
+		//PORTD &= ((input & 1)<<PORTD0); //Check if bit is to be written, and set SER channel		
+
 		PORTD |= _BV(PORTD1); //SRCLK Rising edge, reading data into registry
+		PORTD |= _BV(PORTD3); //RCLK rising edge, loading new values in
+		_delay_ms(50);
 
 	}
 
-	PORTD |= _BV(PORTD3); //RCLK rising edge, loading new values in
-	PORTD &= ~(_BV(PORTD4)); //OE low, Enable output
 
 }

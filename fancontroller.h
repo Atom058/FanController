@@ -14,16 +14,16 @@
 	uint16_t readFanCurrent(uint8_t channel);;
 	void checkConnection(void);
 	void refreshDisplay(void);
-	void shiftout(uint32_t input);
+	void shiftout(uint8_t input);
 
 	//PORT LOCATIONS
 		//Shift registry
 			// Location of: SHIFTREG PORTD
 			// Location of: SER PORTD0
 			// Location of: SRCLK PORTD1
-			// Location of: SRCLR PORTD2
+			// Location of: _SRCLR_ PORTD2
 			// Location of: RCLK PORTD3
-			// Location of: OE PORTD4
+			// Location of: _OE_ PORTD4
 
 		//LED refresh interrupt
 			// Location of: REFRESHPORT PORTD
