@@ -235,4 +235,13 @@ void refreshDisplay(void){
 
 
 
-void shiftout(uint32_t input){}
+/*
+	My own implementation of shift register communicaiton
+		There is probably already 100's of examples of this code availble,
+		but I wanted to learn...
+*/
+void shiftout(uint32_t input){
+
+	
+	
+}
