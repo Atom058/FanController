@@ -29,9 +29,9 @@ uint8_t	LEDColours[10][3] = {
 		, {0, 0, 0}
 		, {0, 0, 0}
 		, {0, 0, 0}
-	}; //Array holding current colour for LED01
+	}; //Array holding current colour of all LED's
 
-uint8_t refreshCount = 0; //PWM counter for LEDs
+uint8_t refreshCount = 0; //PWM counter for LED's
 
 int main (void) {
 
@@ -41,7 +41,9 @@ int main (void) {
 
 	while(1){
 
-		if( timer0Tracker = TCNT0 ){
+
+		//LED Display Ticker
+		if( timer0Tracker == TCNT0 ){
 
 			//Empty, better performance
 
@@ -58,7 +60,10 @@ int main (void) {
 
 		} //else
 
-		
+
+
+		//Rotary encoder input
+
 
 	} //while
 
@@ -104,6 +109,7 @@ void setup(void) {
 			
 		//Set Outputs for shift register
 			DDRD |= _BV(DDD0) |	_BV(DDD1) |	_BV(DDD2) |	_BV(DDD3) |	_BV(DDD4);
+			PORTB |= _BV(SRCLR) | _BV(OE); //Enable, and avoid clear!
 
 		//Disable pin 28 / PC6 by enabling internal pull-up (in input configuration)
 			PORTC |= _BV(PORTC5);
@@ -274,6 +280,17 @@ void refreshDisplay(void){
 */
 void shiftout(uint32_t input){
 
+	SHIFTREG &= ~(_BV(OE)); //Disable output
 
+	for(int bit=0; bit<sizeof(input); bit++){
+
+		SHIFTREG &= ~(_BV(SRCLK)); //Ensure clock is low
+		SHIFTREG |= (input>>bit & 1)<<SER; //Set serial data to send
+		SHIFTREG |= _BV(SRCLK); //Rising edge, reading data
+
+	}
+
+	SHIFTREG |= _BV(RCLK); //Registry clock, loading new values
+	SHIFTREG |= _BV(OE); //Enable output
 
 }
