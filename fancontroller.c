@@ -1,4 +1,4 @@
-#include <atmelrc.h>
+#include <fancontroller.h>
 
 uint16_t fan1Current = 0;
 uint16_t fan2Current = 0;
@@ -14,6 +14,22 @@ uint16_t fan5CurrentMaxSpeed = 0;
 
 uint8_t connectedFans = 0;
 
+uint8_t currentColour = RED;
+uint8_t	LEDColours[10][3] = {
+		  {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+	}; //Array holding current colour for LED01
+
+uint8_t refreshCount = 0; //PWM counter for LEDs
+
 int main (void) {
 
 	setup();
@@ -21,6 +37,7 @@ int main (void) {
 	startup();	
 
 	while(1){
+
 
 	}
 
@@ -46,11 +63,12 @@ void setup(void) {
 				//Timer1 PWM settings - 8BIT timer mode
 				TCCR1A |= _BV(COM1A1) | _BV(COM1B1) | _BV(WGM10);
 				TCCR1B |= _BV(WGM12);
-				//Timer2 PWM settings (only OC2A used)
-				TCCR2A |= _BV(COM2A1) | _BV(WGM20) | _BV(WGM21); 
-
-			//Enable interrupt for Timer0 overflow (used for LED updates)
-				TIMSK0 |= _BV(TOIE0);
+				//Timer2 PWM settings (only OC2A used as output)
+				TCCR2A |= _BV(COM2A1) | _BV(WGM20) | _BV(WGM21);
+			
+			//Enable interrupt for Timer2 overflow and half way (used for LED updates)
+				OCR2B = 128; //Half way point
+				TIMSK2 |= _BV(TOIE2) | _BV(OCIE2B); //Enable interrupts
 
 		//Set inputs for rotary encoder - all inputs with pull-ups
 			//PB0 button, PB4 Left. PB5 Right
@@ -65,7 +83,7 @@ void setup(void) {
 			ADCSRA |= _BV(ADEN); //Enable ADC
 
 			//Disable digital inputs on Analog pins
-			DIDR0 |= _BV(ADC0) | _BV(ADC1) | _BV(ADC2) | _BV(ADC3) | _BV(ADC4);
+			DIDR0 |= _BV(ADC0D) | _BV(ADC1D) | _BV(ADC2D) | _BV(ADC3D) | _BV(ADC4D);
 
 	sei(); //Enable interrupts again
 
@@ -126,7 +144,7 @@ uint16_t readFanCurrent(uint8_t chADC) {
 	ADMUX |= chADC;
 	ADCSRA |=_BV(ADSC); //Starts conversion
 
-	while( (ADCSR>>_BV(ADSC)) & 1); //Waits for conversion to finish
+	while( ADCSRA>>ADSC & 1 ); //Waits for conversion to finish
 
 	uint16_t out = 0;
 	out = ADCH<<sizeof(ADCL);
@@ -169,12 +187,52 @@ void checkConnection(void) {
 
 
 /*
-
-	LED refresh
-		When Timer0 overflows, the display should be updated.
-		This method takes care of that, by pushing data to the display through a series of shift registers.
-
+	LED refresh timout:
+		When Timer2 overflows, or reaches the half-way point, the display should be updated.
 */
-ISR(TIMER0_OVF_vect){
+ISR(TIMER2_OVF_vect){
+
+	refreshDisplay();
 
 }
+ISR(TIMER2_COMPB_vect, ISR_ALIASOF(TIMER2_OVF_vect));
+
+
+
+
+/*
+	Refresh LED's
+		Each of the 10 LED's uses 3 channels (RGB)
+		Each colour channel is 8 bits long
+*/
+void refreshDisplay(void){
+
+	//Prepare output to display
+	uint32_t output = 0;
+
+	//For each LED, compare the value of the current colour with the refresh count
+	for( int led=0; led<10; led++ ){
+
+		if( LEDColours[led][currentColour] > refreshCount ){
+			output |= _BV(currentColour)<<(led*3); //Shift value to correct position
+		}
+
+	}
+
+	//Shift the output to the LED's
+	shiftout(output<<SHIFTREGISTEREMPTYBITS);
+
+	//Increment colours/counter
+	currentColour++;
+	if( currentColour > BLUE) {
+		currentColour = RED;
+
+		refreshCount++; //PWM counter for LEDs
+		//counter resets automatically when it reaches 255 + 1
+	}
+
+}
+
+
+
+void shiftout(uint32_t input){}

@@ -5,13 +5,16 @@
 	#include <avr/io.h>
 	#include <avr/interrupt.h>
 	#include <avr/eeprom.h>
+	#include <util/delay.h>
 
 	//Function delcarations
 	void setup(void);
 	void startup(void);
 	void recordFanCurrents(void); 
-	uint8_t readFanCurrent(uint8_t channel);
+	uint16_t readFanCurrent(uint8_t channel);
 	void checkConnection(void);
+	void refreshDisplay(void);
+	void shiftout(uint32_t input);
 
 	#define SER PORTD0
 	#define SRCLK PORTD1
@@ -38,5 +41,22 @@
 	#define FAN5CH 0b00000100
 
 	#define CONNECTIONTHRESHOLD 2
+
+	#define RED 0
+	#define GREEN 1
+	#define BLUE 2
+
+	#define SHIFTREGISTEREMPTYBITS 2
+
+	#define LED01 1
+	#define LED02 2
+	#define LED03 3
+	#define LED04 4
+	#define LED05 5
+	#define LED06 6
+	#define LED07 7
+	#define LED08 8
+	#define LED09 9
+	#define LED10 10
 
 #endif
