@@ -27,3 +27,13 @@ This project aims to create a PC fan controller, based on the Arduino / Atmel fr
 ##Unconnected pins
 *) PC5
 *) PD7
+
+#Fuses
+
+CKSEL0: 1
+CKSEL1: 1
+CKSEL2: 1
+CKSEL3: 0
+
+SUT0: 0
+SUT1: 1
