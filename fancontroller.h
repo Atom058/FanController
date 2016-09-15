@@ -14,7 +14,7 @@
 	uint16_t readFanCurrent(uint8_t channel);;
 	void checkConnection(void);
 	void refreshDisplay(void);
-	void shiftout(uint8_t input);
+	void shiftout(uint32_t input);
 
 	//PORT LOCATIONS
 		//Shift registry

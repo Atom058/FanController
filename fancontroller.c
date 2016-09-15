@@ -19,9 +19,9 @@ uint8_t timer0Tracker = 0;
 
 uint8_t currentColour = RED;
 uint8_t	LEDColours[10][3] = {
-		  {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
+		  {20, 127, 255}
+		, {30, 99, 40}
+		, {255, 255, 0}
 		, {0, 0, 0}
 		, {0, 0, 0}
 		, {0, 0, 0}
@@ -39,18 +39,21 @@ int main (void) {
 
 	startup();
 
-	PORTD |= _BV(PORTD2); //Disable clear
-	PORTD &= ~(_BV(PORTD4)); //Enable output
-
-	uint8_t count = 0;
+	//uint32_t out = 1; //TESTCASE
 
 	while(1){
 
-		shiftout(count);
-		_delay_ms(1);
-		count++;
+	/* TESTCASE
+	shiftout(out);
+	_delay_ms(10);
+	out <<= 1;
 
-/*
+	if (out == 0){ 
+		out = 1; 
+	}
+	*/
+
+	
 		//LED Display Ticker
 		if( timer0Tracker == TCNT0 ){
 
@@ -58,21 +61,18 @@ int main (void) {
 
 		} else {
 
-			//If Timer0 has reset, reset the tracker
-			if (timer0Tracker > TCNT0){
-				
-				timer0Tracker = TCNT0;
-			}
+			//If Timer0 has change, reset the tracker
+			timer0Tracker = TCNT0;
 
 			//Software interrupt to trigger LCD refresh
 			PORTD ^= ~(PORTD7);
 
 		} //else
 
-
+	
 
 		//Rotary encoder input
-*/
+		//TODO
 
 	} //while
 
@@ -118,7 +118,7 @@ void setup(void) {
 			
 		//Set Outputs for shift register
 			DDRD |= _BV(DDD0) |	_BV(DDD1) |	_BV(DDD2) |	_BV(DDD3) |	_BV(DDD4);
-			PORTB |= _BV(PORTD2) | _BV(PORTD4); //Disable output, and avoid clear!
+			PORTD |= _BV(PORTD2) | _BV(PORTD4); //Disable output, and avoid clear!
 
 		//Disable pin 28 / PC6 by enabling internal pull-up (in input configuration)
 			DDRC |= _BV(DDC5);
@@ -257,12 +257,27 @@ void refreshDisplay(void){
 
 	//Prepare output to display
 	uint32_t output = 0;
+	//Temp storage for LED on-state
+	uint32_t bitValue = 0;
 
 	//For each LED, compare the value of the current colour with the refresh count
-	for( int led=0; led<10; led++ ){
+	//LED 10 is on the far right, which makes more sense
+	for( int led=10; led>0; led-- ){
 
-		if( LEDColours[led][currentColour] > refreshCount ){
-			output |= _BV(currentColour)<<(led*3); //Shift value to correct position
+		//If current colour intensity is larger than the cycle count
+		if( LEDColours[(led-1)][currentColour] > refreshCount ){
+
+			bitValue = _BV(currentColour); //Temp storage for LED on-state
+
+			for( uint8_t shiftTimes=0; shiftTimes<(10-led); shiftTimes++ ){
+
+				//Shift the output 3 times to the right for each LED (RGB LED)
+				bitValue <<= 3; //Shift value to correct position
+
+			}
+
+			output |= bitValue;
+
 		}
 
 	}
@@ -288,21 +303,22 @@ void refreshDisplay(void){
 		There is probably already 100's of examples of this code availble,
 		but I wanted to learn...
 */
-void shiftout(uint8_t input){
+void shiftout(uint32_t input){
+
+	PORTC ^= _BV(PORTC5); //Test
 
 	PORTD |= _BV(PORTD4); //OE high, Disable output
 	PORTD &= ~(_BV(PORTD3)); //RCLK low
 
-	for(uint8_t bit=0; bit<8; bit++){
+	for(uint8_t bit=0; bit<32; bit++){
 
 		PORTD &= ~(_BV(PORTD1)); //SRCLK Low
 
-		PORTD &= ~(_BV(PORT0)); //Discards old value
-		PORTD |= (input & 1)<<PORTD0;
+		PORTD &= ~(_BV(PORTD0)); //Discards old value
+		PORTD |= ((input & 1)<<PORTD0);
 		input = input>>1; //Discard leftmost bit
 
 		PORTD |= _BV(PORTD1); //SRCLK Rising edge, reading data into registry
-		//_delay_ms(50);
 
 	}
 
