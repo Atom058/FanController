@@ -15,23 +15,35 @@ uint16_t fan5CurrentMaxSpeed = 0;
 uint8_t connectedFans = 0;
 
 //tracking value of Timer0 to use as timer for LED display as well
-uint8_t timer0Tracker = 0;
+//uint8_t timer0Tracker = 0; Depracted
 
 uint8_t currentColour = RED;
-uint8_t	LEDColours[10][3] = {
-		  {20, 127, 255}
-		, {30, 99, 40}
-		, {255, 255, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-	}; //Array holding current colour of all LED's
+uint8_t	LEDColours[10][4] = {
+		  {0, 0, 0, 0}
+		, {0, 0, 0, 0}
+		, {0, 0, 0, 0}
+		, {0, 0, 0, 0}
+		, {0, 0, 0, 0}
+		, {0, 0, 0, 0}
+		, {0, 0, 0, 0}
+		, {0, 0, 0, 0}
+		, {0, 0, 0, 0}
+		, {0, 0, 0, 0}
+	}; //Array holding current colour of all LED's, as well as a dimmer channel
+uint8_t	buffer[10][4] = {
+		  {0, 0, 0, 0}
+		, {0, 0, 0, 0}
+		, {0, 0, 0, 0}
+		, {0, 0, 0, 0}
+		, {0, 0, 0, 0}
+		, {0, 0, 0, 0}
+		, {0, 0, 0, 0}
+		, {0, 0, 0, 0}
+		, {0, 0, 0, 0}
+		, {0, 0, 0, 0}
+	}; //Array holding current colour of all LED's, used in sweeping the LED's
 
-uint8_t refreshCount = 0; //PWM counter for LED's
+// uint8_t refreshCount = 0; //PWM counter for LED's Depracted
 
 int main (void) {
 
@@ -40,6 +52,9 @@ int main (void) {
 	startup();
 
 	//uint32_t out = 1; //TESTCASE
+
+	setColour(1, 1, 1, 0, 0);
+	setColour(2, 0, 1, 0, 2);
 
 	while(1){
 
@@ -53,8 +68,8 @@ int main (void) {
 	}
 	*/
 
-	
-		//LED Display Ticker
+	/*
+		//LED Display Ticker -- depracted
 		if( timer0Tracker == TCNT0 ){
 
 			//Empty, better performance
@@ -68,7 +83,7 @@ int main (void) {
 			PORTD ^= ~(PORTD7);
 
 		} //else
-
+	*/
 	
 
 		//Rotary encoder input
@@ -102,15 +117,15 @@ void setup(void) {
 				TCCR2A |= _BV(COM2A1) | _BV(WGM20) | _BV(WGM21);
 			
 			//Enable interrupt for Timer2 overflow and half way (used for LED updates)
-				//TODO -- this will probably not be used in the end
-				//OCR2B = 128; //Half way point
-				//TIMSK2 |= _BV(TOIE2) | _BV(OCIE2B); //Enable interrupts
-		//Enable interrupts to trigger LED refresh cycles
+				OCR2B = 128; //Half way point
+				TIMSK2 |= _BV(TOIE2) | _BV(OCIE2B); //Enable interrupts for overflow and halfway
+
+		//Enable interrupts to trigger LED refresh cycles -- PROBABLY WILL NO BE USED!
 			//Enable pin change interrupt for pin 13 / PD7 / PCINT23
-				PCICR |= _BV(PCIE2);
-				PCMSK2 |= _BV(PCINT23);
+				//PCICR |= _BV(PCIE2);
+				//PCMSK2 |= _BV(PCINT23);
 			//Set PD7 as output
-				DDRD |= _BV(DDD7);
+				//DDRD |= _BV(DDD7);
 
 		//Set inputs for rotary encoder - all inputs with pull-ups
 			//PB0 button, PB4 Left. PB5 Right
@@ -121,7 +136,7 @@ void setup(void) {
 			PORTD |= _BV(PORTD2) | _BV(PORTD4); //Disable output, and avoid clear!
 
 		//Disable pin 28 / PC6 by enabling internal pull-up (in input configuration)
-			DDRC |= _BV(DDC5);
+			DDRC |= _BV(DDC5); //Currently used as power on signal
 			PORTC |= _BV(PORTC5);
 
 		//ADC configuration
@@ -235,15 +250,19 @@ void checkConnection(void) {
 
 /*
 	LED refresh timout:
-		Software interrupt causes refresh call
+		When Timer2 overflows, or reaches the half-way point, the display should be updated.
 
-		depracted: When Timer2 overflows, or reaches the half-way point, the display should be updated.
+		depracted: Software interrupt causes refresh call
 */
-ISR(PCINT2_vect){
+//ISR(PCINT2_vect){} //Old interrupt, with PCINT source
+
+ISR(TIMER2_OVF_vect){
 
 	refreshDisplay();
 
 }
+
+ISR(TIMER2_COMPB_vect, ISR_ALIASOF(TIMER2_OVF_vect));
 
 
 
@@ -251,12 +270,91 @@ ISR(PCINT2_vect){
 /*
 	Refresh LED's
 		Each of the 10 LED's uses 3 channels (RGB)
-		Each colour channel is 8 bits long
+		Each colour channel is 3 bits long (values ranging from 0-7)
+
+		The logic is optimized to always never leave gaps in when possible, i.e. to maximze brightness
+		Therefore, the values in the array does not represent true bit values, 
+		but more of relationships between colours: how bright they are in relation to the others.
+
+		There is a fourth channel available to dim the LED, if this is required. 
+		Writing to this channel will output 0 to the shift register
 */
 void refreshDisplay(void){
 
 	//Prepare output to display
 	uint32_t output = 0;
+	uint32_t bitValue = 0;
+	uint8_t channel = 0;
+
+	for( int led=10; led>0; led-- ){
+
+		//Search for next data point to display
+		if( buffer[led][0] > 0 ) {
+
+			buffer[led][0]--; //Reduce count in buffer by one
+			channel = 0;
+
+		} else if( buffer[led][1] > 0 ){
+
+			buffer[led][1]--; //Reduce count in buffer by one
+			channel = 1;
+
+		} else if( buffer[led][2] > 0 ){
+
+			buffer[led][2]--; //Reduce count in buffer by one
+			channel = 2;
+
+		} else if( buffer[led][3] > 0 ){
+
+			buffer[led][3]--; //Reduce count in buffer by one
+			channel = 3;
+
+		} else {
+
+			//Copy new buffer data from colour channel - returns false if LEDcolour has no info
+			if( copyToBuffer(led) ){
+
+				led++; //redo the current loop
+
+			}
+
+			continue; //Continue with next LED -- the current LED will be updated on the next sequence
+
+		}
+
+
+		if(channel != 3){ //push no data if the channel is empty -- already 0 for all LED outputs
+
+			bitValue = 1;
+
+			for( uint8_t shiftTimes=0; shiftTimes<channel; shiftTimes++ ){
+
+				//Shift to the correct LED channel
+				bitValue <<= 1;
+
+			}
+
+			for( uint8_t shiftTimes=0; shiftTimes<(10-led); shiftTimes++ ){
+
+				//Shift the output 3 times to the right for each LED (RGB LED)
+				bitValue <<= 3; //Shift value to correct position
+
+			}
+
+			output |= bitValue; //Merge the bit with the output
+
+		}
+
+
+	}
+
+	shiftout(output<<SHIFTREGISTEREMPTYBITS);
+
+
+
+
+
+	/* Depracted method < delete this later!
 	//Temp storage for LED on-state
 	uint32_t bitValue = 0;
 
@@ -291,11 +389,63 @@ void refreshDisplay(void){
 		currentColour = RED;
 
 		refreshCount++; //PWM counter for LEDs
+		if(refreshCount >= 128){
+			refreshCount = 0;
+		}
 		//counter resets automatically when it reaches 255 + 1
 	}
+	*/
 
 }
 
+
+
+/*
+	Copies LEDColours data into the buffer, which is used for keeping track of screen refresh
+
+	Returns: 
+		0 if no bytes was copied
+		>=1 if data was copied
+*/
+uint8_t copyToBuffer(uint8_t led){
+
+	uint8_t bitsum = LEDColours[led][0] + LEDColours[led][1] + LEDColours[led][2] + LEDColours[led][3];
+
+	if(bitsum > 0){
+
+		//Don't bother copying anything if there is nothing to copy
+		for( uint8_t i=0;  i<4; i++ ){
+			buffer[led][i] = LEDColours[led][i]; //Copy to buffer
+		}
+
+	}
+
+	return bitsum;
+
+}
+
+void setColour(uint8_t led, uint8_t redCh, uint8_t greenCh, uint8_t blueCh, uint8_t dimmerCh){
+
+	if( redCh > 7 ){
+		redCh = 7;
+	}
+	if( greenCh > 7 ){
+		greenCh = 7;
+	}
+	if( blueCh > 7 ){
+		blueCh = 7;
+	}
+	if( dimmerCh > 7 ){
+		dimmerCh = 7;
+	}
+
+	//Copy values to the buffer
+	LEDColours[led][0] = redCh;
+	LEDColours[led][1] = greenCh;
+	LEDColours[led][2] = blueCh;
+	LEDColours[led][3] = dimmerCh;
+
+}
 
 
 /*

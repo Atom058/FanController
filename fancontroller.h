@@ -15,6 +15,8 @@
 	void checkConnection(void);
 	void refreshDisplay(void);
 	void shiftout(uint32_t input);
+	uint8_t copyToBuffer(uint8_t LED);
+	void setColour(uint8_t led, uint8_t redCh, uint8_t greenCh, uint8_t blueCh, uint8_t dimmerCh);
 
 	//PORT LOCATIONS
 		//Shift registry
