@@ -175,19 +175,8 @@ void startup(void) {
 	PORTC ^= _BV(PORTC5);
 	_delay_ms(250); 
 
-	//Read max currents
-	fan1CurrentMaxSpeed = readFanCurrent(FAN1CH);
-	fan2CurrentMaxSpeed = readFanCurrent(FAN2CH);
-	fan3CurrentMaxSpeed = readFanCurrent(FAN3CH);
-	fan4CurrentMaxSpeed = readFanCurrent(FAN4CH);
-	fan5CurrentMaxSpeed = readFanCurrent(FAN5CH);
-	fan1Current = fan1CurrentMaxSpeed;
-	fan2Current = fan2CurrentMaxSpeed;
-	fan3Current = fan3CurrentMaxSpeed;
-	fan4Current = fan4CurrentMaxSpeed;
-	fan5Current = fan5CurrentMaxSpeed;
-
-	checkConnection();
+	//Store connection status
+	checkConnections(); 
 
 }
 
@@ -246,7 +235,7 @@ uint16_t readFanCurrent(uint8_t chADC) {
 	Helper method to record connection status of all fans
 	Turns on all unconnected channels and checks for new fan additions
 */
-void checkConnection(void) {
+void checkConnections(void) {
 
 
 
