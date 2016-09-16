@@ -194,16 +194,6 @@ void startup(void) {
 
 
 /*
-	Helper method to read all fan currents and store these in variables fanXcurrent
-*/
-void recordFanCurrents(void) {
-
-
-}
-
-
-
-/*
 	Helper method to read and return a voltage for a sepcific fan
 	Fan channels are recorded in macros FANxCH in .h file for easy reference
 */
@@ -263,136 +253,146 @@ void checkConnection(void) {
 	/*
 		----- FAN CHANNEL 1 -----
 	*/
-	//Check if this output has a newly connected fan
-	if((connectedFans>>FAN1CONN & 1) != 0){
 
-		OCR0A = 255; //Turn on fan at full speed
-		DDRD |= _BV(DDD5); //Turn on output
+		//Check if this output has a newly connected fan
+		if((connectedFans>>FAN1CONN & 1) != 0){
 
-	}
+			//Check if there is any current draw with output on
+			OCR0A = 255; //Turn on fan at full speed
+			DDRD |= _BV(DDD5); //Turn on output
+			_delay_us(UNCONNECTEDFANSTARTUPTIME); //Wait for output to turn on
+			fan1Current = readFanCurrent(FAN1CH);
 
-	fan1Current = readFanCurrent(FAN1CH);
+		} else {
 
-	if(fan1Current > CONNECTIONTHRESHOLD){
+			//TODO: match this with current timer status; otherwise, we might measure with output off!
+			fan1Current = readFanCurrent(FAN1CH);
+			
+		}	
 
-		connectedFans |= _BV(FAN1CONN); //Set connection bit
+		if( fan1Current < CONNECTIONTHRESHOLD ){
 
-	} else {
-
-		connectedFans &= ~(_BV(FAN1CONN)); //unset bit
-		OCR0A = 0; //Reset timer
-		DDRD &= ~(_BV(DDD5)); //Turn off output
-
-	}
-
+			connectedFans &= ~(_BV(FAN1CONN)); //unset bit
+			OCR0A = 0; //Reset timer
+			DDRD &= ~(_BV(DDD5)); //Turn off output
+			
+		}
 
 
 	/*
 		----- FAN CHANNEL 2 -----
 	*/
-	//Check if this output has a newly connected fan
-	if((connectedFans>>FAN2CONN & 1) != 0){
 
-		OCR0B = 255; //Turn on fan at full speed
-		DDRD |= _BV(DDD6); //Turn on output
+		//Check if this output has a newly connected fan
+		if((connectedFans>>FAN2CONN & 1) != 0){
 
-	}
+			//Check if there is any current draw with output on
+			OCR0B = 255; //Turn on fan at full speed
+			DDRD |= _BV(DDD6); //Turn on output
+			_delay_us(UNCONNECTEDFANSTARTUPTIME); //Wait for output to turn on
+			fan2Current = readFanCurrent(FAN2CH);
 
-	fan2Current = readFanCurrent(FAN2CH);
+		} else {
 
-	if(fan2Current > CONNECTIONTHRESHOLD){
+			//TODO: match this with current timer status; otherwise, we might measure with output off!
+			fan2Current = readFanCurrent(FAN2CH);
+			
+		}	
 
-		connectedFans |= _BV(FAN2CONN); //Set connection bit
+		if( fan2Current < CONNECTIONTHRESHOLD ){
 
-	} else {
-
-		connectedFans &= ~(_BV(FAN2CONN)); //unset bit
-		OCR0B = 0; //Reset timer
-		DDRD &= ~(_BV(DDD6)); //Turn off output
-
-	}
-
+			connectedFans &= ~(_BV(FAN2CONN)); //unset bit
+			OCR0B = 0; //Reset timer
+			DDRD &= ~(_BV(DDD6)); //Turn off output
+			
+		}
 
 
 	/*
 		----- FAN CHANNEL 3 -----
 	*/
-	//Check if this output has a newly connected fan
-	if((connectedFans>>FAN3CONN & 1) != 0){
 
-		OCR1AL = 255; //Turn on fan at full speed
-		DDRB |= _BV(DDB1); //Turn on output
+		//Check if this output has a newly connected fan
+		if((connectedFans>>FAN3CONN & 1) != 0){
 
-	}
+			//Check if there is any current draw with output on
+			OCR1AL = 255; //Turn on fan at full speed
+			DDRB |= _BV(DDB1); //Turn on output
+			_delay_us(UNCONNECTEDFANSTARTUPTIME); //Wait for output to turn on
+			fan3Current = readFanCurrent(FAN3CH);
 
-	fan3Current = readFanCurrent(FAN3CH);
+		} else {
 
-	if(fan3Current > CONNECTIONTHRESHOLD){
+			//TODO: match this with current timer status; otherwise, we might measure with output off!
+			fan3Current = readFanCurrent(FAN3CH);
+			
+		}	
 
-		connectedFans |= _BV(FAN3CONN); //Set connection bit
+		if( fan3Current < CONNECTIONTHRESHOLD ){
 
-	} else {
-
-		connectedFans &= ~(_BV(FAN3CONN)); //unset bit
-		OCR1AL = 0; //Reset timer
-		DDRB &= ~(_BV(DDB1)); //Turn off output
-
-	}
-
+			connectedFans &= ~(_BV(FAN3CONN)); //unset bit
+			OCR1AL = 0; //Reset timer
+			DDRB &= ~(_BV(DDB1)); //Turn off output
+			
+		}
 
 
 	/*
 		----- FAN CHANNEL 4 -----
 	*/
-	//Check if this output has a newly connected fan
-	if((connectedFans>>FAN4CONN & 1) != 0){
 
-		OCR1BL = 255; //Turn on fan at full speed
-		DDRB |= _BV(DDB2); //Turn on output
+		//Check if this output has a newly connected fan
+		if((connectedFans>>FAN4CONN & 1) != 0){
 
-	}
+			//Check if there is any current draw with output on
+			OCR1BL = 255; //Turn on fan at full speed
+			DDRB |= _BV(DDB2); //Turn on output
+			_delay_us(UNCONNECTEDFANSTARTUPTIME); //Wait for output to turn on
+			fan4Current = readFanCurrent(FAN4CH);
 
-	fan4Current = readFanCurrent(FAN4CH);
+		} else {
 
-	if(fan4Current > CONNECTIONTHRESHOLD){
+			//TODO: match this with current timer status; otherwise, we might measure with output off!
+			fan4Current = readFanCurrent(FAN4CH);
+			
+		}	
 
-		connectedFans |= _BV(FAN4CONN); //Set connection bit
+		if( fan4Current < CONNECTIONTHRESHOLD ){
 
-	} else {
-
-		connectedFans &= ~(_BV(FAN4CONN)); //unset bit
-		OCR1BL = 0; //Reset timer
-		DDRB &= ~(_BV(DDB2)); //Turn off output
-
-	}
-
+			connectedFans &= ~(_BV(FAN4CONN)); //unset bit
+			OCR1BL = 0; //Reset timer
+			DDRB &= ~(_BV(DDB2)); //Turn off output
+			
+		}
 
 
 	/*
 		----- FAN CHANNEL 5 -----
 	*/
-	//Check if this output has a newly connected fan
-	if((connectedFans>>FAN5CONN & 1) != 0){
 
-		OCR2A = 255; //Turn on fan at full speed
-		DDRB |= _BV(DDB3); //Turn on output
+		//Check if this output has a newly connected fan
+		if((connectedFans>>FAN5CONN & 1) != 0){
 
-	}
+			//Check if there is any current draw with output on
+			OCR2A = 255; //Turn on fan at full speed
+			DDRB |= _BV(DDB3); //Turn on output
+			_delay_us(UNCONNECTEDFANSTARTUPTIME); //Wait for output to turn on
+			fan5Current = readFanCurrent(FAN5CH);
 
-	fan5Current = readFanCurrent(FAN5CH);
+		} else {
 
-	if(fan5Current > CONNECTIONTHRESHOLD){
+			//TODO: match this with current timer status; otherwise, we might measure with output off!
+			fan5Current = readFanCurrent(FAN5CH);
+			
+		}	
 
-		connectedFans |= _BV(FAN5CONN); //Set connection bit
+		if( fan5Current < CONNECTIONTHRESHOLD ){
 
-	} else {
-
-		connectedFans &= ~(_BV(FAN5CONN)); //unset bit
-		OCR2A = 0; //Reset timer
-		DDRB &= ~(_BV(DDB3)); //Turn off output
-
-	}
-
+			connectedFans &= ~(_BV(FAN5CONN)); //unset bit
+			OCR2A = 0; //Reset timer
+			DDRB &= ~(_BV(DDB3)); //Turn off output
+			
+		}
 
 }
 

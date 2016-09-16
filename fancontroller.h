@@ -41,6 +41,8 @@
 	#define DEBOUNCETURN 150
 	#define DEBOUNCEBUTTON 250
 
+	#define UNCONNECTEDFANSTARTUPTIME 50
+
 	//Storage of fan status
 	#define FAN1CONN 0
 	#define FAN2CONN 1
