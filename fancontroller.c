@@ -302,20 +302,6 @@ void checkConnection(void) {
 
 
 
-/*
-	LED refresh timout:
-		When Timer2 overflows, or reaches the half-way point, the display should be updated.
-
-*/
-ISR(TIMER2_OVF_vect){
-
-	//TEMP - use display as indicator instead refreshDisplay();
-
-}
-
-ISR(TIMER2_COMPB_vect, ISR_ALIASOF(TIMER2_OVF_vect));
-
-
 
 
 /*
@@ -479,3 +465,20 @@ void shiftout(uint32_t input){
 	//PORTD &= ~(_BV(PORTD4)); //OE low, Enable output
 
 }
+
+
+
+
+
+/*
+	LED refresh timout:
+		When Timer2 overflows, or reaches the half-way point, the display should be updated.
+
+*/
+ISR(TIMER2_OVF_vect){
+
+	//TEMP - use display as indicator instead refreshDisplay();
+
+}
+
+ISR(TIMER2_COMPB_vect, ISR_ALIASOF(TIMER2_OVF_vect));
