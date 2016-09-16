@@ -98,6 +98,10 @@ void setup(void) {
 			CLKPR = 0;
 
 		//Timer 0-2 for PWM
+			//Configure pins as outputs
+			DDRD |= _BV(DDD5) | _BV(DDD6);
+			DDRB |= _BV(DDB1) | _BV(DDB2) | _BV(DDB3);
+
 			//Set prescalers to 1/256 of I/O clock
 			TCCR0B |= _BV(CS02); //Timer0 Prescaler
 			TCCR1B |= _BV(CS12); //Timer1 Prescaler
@@ -152,17 +156,25 @@ void setup(void) {
 void startup(void) {
 
 	//Activate all fans on full speed
-	OCR0A ^= 0; //Fan #1
-	OCR0B ^= 0; //Fan #2
-	OCR1A ^= 0; //Fan #3
-	OCR1B ^= 0; //Fan #4
-	OCR2A ^= 0; //Fan #5
+	OCR0A = ~(0); //Fan #1
+	OCR0B = ~(0); //Fan #2
+	OCR1AL = ~(0); //Fan #3
+	OCR1BL = ~(0); //Fan #4
+	OCR2A = ~(0); //Fan #5
 
 	//Let fans spin to full speed
-	_delay_ms(1000); 
+	_delay_ms(250); 
+	PORTC ^= _BV(PORTC5);
+	_delay_ms(250); 
+	PORTC ^= _BV(PORTC5);
+	_delay_ms(250); 
+	PORTC ^= _BV(PORTC5);
+	_delay_ms(250); 
+	PORTC ^= _BV(PORTC5);
+	_delay_ms(250); 
 
 	//Read max currents
-	fan1CurrentMaxSpeed = readFanCurrent(FAN1CH);
+	/*fan1CurrentMaxSpeed = readFanCurrent(FAN1CH);
 	fan2CurrentMaxSpeed = readFanCurrent(FAN2CH);
 	fan3CurrentMaxSpeed = readFanCurrent(FAN3CH);
 	fan4CurrentMaxSpeed = readFanCurrent(FAN4CH);
@@ -173,7 +185,7 @@ void startup(void) {
 	fan4Current = fan4CurrentMaxSpeed;
 	fan5Current = fan5CurrentMaxSpeed;
 
-	checkConnection();
+	checkConnection();*/
 
 }
 
@@ -397,8 +409,6 @@ void setColour(uint8_t led, uint8_t redCh, uint8_t greenCh, uint8_t blueCh, uint
 		but I wanted to learn...
 */
 void shiftout(uint32_t input){
-
-	PORTC ^= _BV(PORTC5); //Test
 
 	//PORTD |= _BV(PORTD4); //OE high, Disable output
 	PORTD &= ~(_BV(PORTD3)); //RCLK low
