@@ -14,9 +14,6 @@ uint16_t fan5CurrentMaxSpeed = 0;
 
 uint8_t connectedFans = 0;
 
-//tracking value of Timer0 to use as timer for LED display as well
-//uint8_t timer0Tracker = 0; Depracted
-
 uint8_t currentColour = RED;
 uint8_t	LEDColours[10][4] = {
 		  {0, 0, 0, 0}
@@ -43,53 +40,20 @@ uint8_t	buffer[10][4] = {
 		, {0, 0, 0, 0}
 	}; //Array holding current colour of all LED's, used in sweeping the LED's
 
-// uint8_t refreshCount = 0; //PWM counter for LED's Depracted
-
 int main (void) {
 
 	setup();
 
 	startup();
 
-	//uint32_t out = 1; //TESTCASE
-
-	setColour(1, 3, 1, 0, 0);
+	//Testcolours
+	setColour(1, 5, 1, 2, 0);
 	setColour(2, 0, 0, 0, 0);
-
-
 
 	while(1){
 
-	/* TESTCASE
-	shiftout(out);
-	_delay_ms(10);
-	out <<= 1;
-
-	if (out == 0){ 
-		out = 1; 
-	}
-	*/
-
-	/*
-		//LED Display Ticker -- depracted
-		if( timer0Tracker == TCNT0 ){
-
-			//Empty, better performance
-
-		} else {
-
-			//If Timer0 has change, reset the tracker
-			timer0Tracker = TCNT0;
-
-			//Software interrupt to trigger LCD refresh
-			PORTD ^= ~(PORTD7);
-
-		} //else
-	*/
-	
-
-		//Rotary encoder input
-		//TODO
+	//Rotary encoder input
+	//TODO
 
 	} //while
 
@@ -122,13 +86,6 @@ void setup(void) {
 				OCR2B = 128; //Half way point
 				TIMSK2 |= _BV(TOIE2) | _BV(OCIE2B); //Enable interrupts for overflow and halfway
 
-		//Enable interrupts to trigger LED refresh cycles -- PROBABLY WILL NO BE USED!
-			//Enable pin change interrupt for pin 13 / PD7 / PCINT23
-				//PCICR |= _BV(PCIE2);
-				//PCMSK2 |= _BV(PCINT23);
-			//Set PD7 as output
-				//DDRD |= _BV(DDD7);
-
 		//Set inputs for rotary encoder - all inputs with pull-ups
 			//PB0 button, PB4 Left. PB5 Right
 			PORTB |= _BV(PORTB0) | _BV(PORTB4) | _BV(PORTB5); //Activate pullups
@@ -140,6 +97,8 @@ void setup(void) {
 		//Disable pin 28 / PC6 by enabling internal pull-up (in input configuration)
 			DDRC |= _BV(DDC5); //Currently used as power on signal
 			PORTC |= _BV(PORTC5);
+		//Disable pin 13 by enabling internal pull-up
+			PORTD |= _BV(PORTD7);
 
 		//ADC configuration
 			//ADMUX: REFS1 & REFS0 set to 0 as standard, so external AREF pin is used as reference
@@ -254,10 +213,7 @@ void checkConnection(void) {
 	LED refresh timout:
 		When Timer2 overflows, or reaches the half-way point, the display should be updated.
 
-		depracted: Software interrupt causes refresh call
 */
-//ISR(PCINT2_vect){} //Old interrupt, with PCINT source
-
 ISR(TIMER2_OVF_vect){
 
 	refreshDisplay();
@@ -351,52 +307,6 @@ void refreshDisplay(void){
 	}
 
 	shiftout(output<<SHIFTREGISTEREMPTYBITS);
-
-
-
-
-
-	/* Depracted method < delete this later!
-	//Temp storage for LED on-state
-	uint32_t bitValue = 0;
-
-	//For each LED, compare the value of the current colour with the refresh count
-	//LED 10 is on the far right, which makes more sense
-	for( int led=10; led>0; led-- ){
-
-		//If current colour intensity is larger than the cycle count
-		if( LEDColours[(led-1)][currentColour] > refreshCount ){
-
-			bitValue = _BV(currentColour); //Temp storage for LED on-state
-
-			for( uint8_t shiftTimes=0; shiftTimes<(10-led); shiftTimes++ ){
-
-				//Shift the output 3 times to the right for each LED (RGB LED)
-				bitValue <<= 3; //Shift value to correct position
-
-			}
-
-			output |= bitValue;
-
-		}
-
-	}
-
-	//Shift the output to the LED's
-	shiftout(output<<SHIFTREGISTEREMPTYBITS);
-
-	//Increment colours/counter
-	currentColour++;
-	if( currentColour > BLUE) {
-		currentColour = RED;
-
-		refreshCount++; //PWM counter for LEDs
-		if(refreshCount >= 128){
-			refreshCount = 0;
-		}
-		//counter resets automatically when it reaches 255 + 1
-	}
-	*/
 
 }
 
