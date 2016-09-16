@@ -38,6 +38,9 @@
 			// Location of: FAN4PWM OCR1B
 			// Location of: FAN5PWM OCR2A
 
+	#define DEBOUNCETURN 150
+	#define DEBOUNCEBUTTON 250
+
 	//Storage of fan status
 	#define FAN1CONN 0
 	#define FAN2CONN 1

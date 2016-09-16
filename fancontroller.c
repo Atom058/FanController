@@ -47,10 +47,40 @@ int main (void) {
 	startup();
 
 	//Testcolours
-	setColour(1, 5, 1, 2, 0);
-	setColour(2, 0, 0, 0, 0);
+	//setColour(1, 5, 1, 2, 0);
+	//setColour(2, 0, 0, 0, 0);
+
+	uint32_t shiftBit = 0x80000000;
+	shiftout(shiftBit);
 
 	while(1){
+
+		if( (PINB>>PINB4 & 1) != 1 ){
+			if( shiftBit>>31 & 1){
+				shiftBit = 0x01000000; //Move to other end
+			} else{
+				shiftBit <<= 1; //Move one to the left
+			}
+			_delay_ms(DEBOUNCETURN);
+		}
+		if( (PINB>>PINB5 & 1) != 1 ){
+			if( shiftBit>>24 & 1){
+				shiftBit = 0x80000000; //Move to other end
+			} else{
+				shiftBit >>= 1; //Move one to the left
+			}
+			_delay_ms(DEBOUNCETURN);
+		}
+		if( (PINB>>PINB0 & 1) != 1 ){
+			if( shiftBit>>31 & 1){
+				shiftBit = 0x01000000; //Move to end
+			} else{
+				shiftBit = 0x80000000; //Move to begining
+			}
+			_delay_ms(DEBOUNCEBUTTON);
+		}
+
+		shiftout(shiftBit);
 
 	//Rotary encoder input
 	//TODO
@@ -87,12 +117,13 @@ void setup(void) {
 				TIMSK2 |= _BV(TOIE2) | _BV(OCIE2B); //Enable interrupts for overflow and halfway
 
 		//Set inputs for rotary encoder - all inputs with pull-ups
-			//PB0 button, PB4 Left. PB5 Right
+			//PB0/P14 button, PB4/P18 Left. PB5/P19 Right
 			PORTB |= _BV(PORTB0) | _BV(PORTB4) | _BV(PORTB5); //Activate pullups
 			
 		//Set Outputs for shift register
 			DDRD |= _BV(DDD0) |	_BV(DDD1) |	_BV(DDD2) |	_BV(DDD3) |	_BV(DDD4);
-			PORTD |= _BV(PORTD2) | _BV(PORTD4); //Disable output, and avoid clear!
+			PORTD |= _BV(PORTD2); //avoid clear!
+			PORTD &= ~(_BV(PORTD4)); //Enable output
 
 		//Disable pin 28 / PC6 by enabling internal pull-up (in input configuration)
 			DDRC |= _BV(DDC5); //Currently used as power on signal
@@ -216,7 +247,7 @@ void checkConnection(void) {
 */
 ISR(TIMER2_OVF_vect){
 
-	refreshDisplay();
+	//TEMP - use display as indicator instead refreshDisplay();
 
 }
 
@@ -369,7 +400,7 @@ void shiftout(uint32_t input){
 
 	PORTC ^= _BV(PORTC5); //Test
 
-	PORTD |= _BV(PORTD4); //OE high, Disable output
+	//PORTD |= _BV(PORTD4); //OE high, Disable output
 	PORTD &= ~(_BV(PORTD3)); //RCLK low
 
 	for(uint8_t bit=0; bit<32; bit++){
@@ -385,6 +416,6 @@ void shiftout(uint32_t input){
 	}
 
 	PORTD |= _BV(PORTD3); //RCLK rising edge, loading new values in
-	PORTD &= ~(_BV(PORTD4)); //OE low, Enable output
+	//PORTD &= ~(_BV(PORTD4)); //OE low, Enable output
 
 }
