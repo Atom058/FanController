@@ -41,7 +41,6 @@
 	#define DEBOUNCETURN 150
 	#define DEBOUNCEBUTTON 250
 
-	#define UNCONNECTEDFANSTARTUPTIME 50
 
 	//Storage of fan status
 	#define FAN1CONN 0
@@ -60,6 +59,10 @@
 
 	//Minimum current reading to identify active fan
 	#define CONNECTIONTHRESHOLD 256
+	//Upper current bound allowed. Controls that no short or still fans are present.
+	#define UPPERCURRENTTHRESHOLD 800
+	//Waiting time in µs between unconnected output is turned on and current reading
+	#define UNCONNECTEDFANSTARTUPTIME 50
 
 	//Colour synonyms
 	#define RED 0
