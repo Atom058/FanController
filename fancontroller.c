@@ -205,11 +205,11 @@ void recordFanCurrents(void) {
 
 /*
 	Helper method to read and return a voltage for a sepcific fan
-	Fan channels are recorded in variables FANxCH in .h file for easy reference
+	Fan channels are recorded in macros FANxCH in .h file for easy reference
 */
 uint16_t readFanCurrent(uint8_t chADC) {
 
-	//Adjust analog channel
+	//Adjust analog channel in ADMUX
 	switch(chADC) {
 
 		case FAN1CH:
@@ -254,7 +254,7 @@ uint16_t readFanCurrent(uint8_t chADC) {
 
 /*
 	Helper method to record connection status of all fans
-	Uses the current reading of sensor to determine status
+	Turns on all unconnected channels and checks for new fan additions
 */
 void checkConnection(void) {
 
@@ -271,7 +271,7 @@ void checkConnection(void) {
 
 	}
 
-	readFanCurrent(FAN1CH);
+	fan1Current = readFanCurrent(FAN1CH);
 
 	if(fan1Current > CONNECTIONTHRESHOLD){
 
@@ -298,7 +298,7 @@ void checkConnection(void) {
 
 	}
 
-	readFanCurrent(FAN2CH);
+	fan2Current = readFanCurrent(FAN2CH);
 
 	if(fan2Current > CONNECTIONTHRESHOLD){
 
@@ -325,7 +325,7 @@ void checkConnection(void) {
 
 	}
 
-	readFanCurrent(FAN3CH);
+	fan3Current = readFanCurrent(FAN3CH);
 
 	if(fan3Current > CONNECTIONTHRESHOLD){
 
@@ -352,7 +352,7 @@ void checkConnection(void) {
 
 	}
 
-	readFanCurrent(FAN4CH);
+	fan4Current = readFanCurrent(FAN4CH);
 
 	if(fan4Current > CONNECTIONTHRESHOLD){
 
@@ -379,7 +379,7 @@ void checkConnection(void) {
 
 	}
 
-	readFanCurrent(FAN5CH);
+	fan5Current = readFanCurrent(FAN5CH);
 
 	if(fan5Current > CONNECTIONTHRESHOLD){
 
