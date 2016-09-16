@@ -139,6 +139,8 @@ void setup(void) {
 			//ADMUX: REFS1 & REFS0 set to 0 as standard, so external AREF pin is used as reference
 			ADCSRA |= _BV(ADPS0) | _BV(ADPS1) | _BV(ADPS2); //Set prescaler to 128 (125 kHz)
 			ADCSRA |= _BV(ADEN); //Enable ADC
+			ADCSRA |= _BV(ADSC); //Make an empty conversion to initiate ADC
+			while(ADCSRA>>ADSC & 1); //Wait until conversion is finished
 
 			//Disable digital inputs on Analog pins
 			DIDR0 |= _BV(ADC0D) | _BV(ADC1D) | _BV(ADC2D) | _BV(ADC3D) | _BV(ADC4D);
@@ -260,35 +262,40 @@ void checkConnection(void) {
 		connectedFans |= _BV(FAN1CONN); //Set connection bit
 	} else {
 		connectedFans &= ~(_BV(FAN1CONN)); //unset bit
-		OCR0A = 0; //Turn off connection
+		OCR0A = 0; //Reset timer
+		DDRD &= ~(_BV(DDD5)); //Turn off output
 	}
 
 	if(fan2Current > CONNECTIONTHRESHOLD){
 		connectedFans |= _BV(FAN2CONN); //Set connection bit
 	} else {
 		connectedFans &= ~(_BV(FAN2CONN)); //unset bit
-		OCR0B = 0; //Turn off connection
+		OCR0B = 0; //Reset timer
+		DDRD &= ~(_BV(DDD6)); //Turn off output
 	}
 
 	if(fan3Current > CONNECTIONTHRESHOLD){
 		connectedFans |= _BV(FAN3CONN); //Set connection bit
 	} else {
 		connectedFans &= ~(_BV(FAN3CONN)); //unset bit
-		OCR1AL = 0; //Turn off connection
+		OCR1AL = 0; //Reset timer
+		DDRB &= ~(_BV(DDB1)); //Turn off output
 	}
 
 	if(fan4Current > CONNECTIONTHRESHOLD){
 		connectedFans |= _BV(FAN4CONN); //Set connection bit
 	} else {
 		connectedFans &= ~(_BV(FAN4CONN)); //unset bit
-		OCR1BL = 0; //Turn off connection
+		OCR1BL = 0; //Reset timer
+		DDRB &= ~(_BV(DDB2)); //Turn off output
 	}
 
 	if(fan5Current > CONNECTIONTHRESHOLD){
 		connectedFans |= _BV(FAN5CONN); //Set connection bit
 	} else {
 		connectedFans &= ~(_BV(FAN5CONN)); //unset bit
-		OCR2A = 0; //Turn off connection
+		OCR2A = 0; //Reset timer
+		DDRB &= ~(_BV(DDB3)); //Turn off output
 	}
 
 }

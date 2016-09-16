@@ -32,11 +32,11 @@
 			// Location of: REFRESHPIN PORTD7
 
 		//Fans' PWM channels
-			// Location of: FAN1PWM OCR0A;
-			// Location of: FAN2PWM OCR0B
-			// Location of: FAN3PWM OCR1A
-			// Location of: FAN4PWM OCR1B
-			// Location of: FAN5PWM OCR2A
+			// Location of: FAN1PWM OCR0A / P11 / PD5
+			// Location of: FAN2PWM OCR0B / P12 / PD6
+			// Location of: FAN3PWM OCR1A / P15 / PB1
+			// Location of: FAN4PWM OCR1B / P16 / PB2
+			// Location of: FAN5PWM OCR2A / P17 / PB3
 
 	#define DEBOUNCETURN 150
 	#define DEBOUNCEBUTTON 250
@@ -57,7 +57,7 @@
 	#define FAN5CH 5
 
 	//Minimum current reading to identify active fan
-	#define CONNECTIONTHRESHOLD 2
+	#define CONNECTIONTHRESHOLD 256
 
 	//Colour synonyms
 	#define RED 0
