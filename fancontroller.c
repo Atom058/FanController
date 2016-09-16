@@ -53,8 +53,10 @@ int main (void) {
 
 	//uint32_t out = 1; //TESTCASE
 
-	setColour(1, 1, 1, 0, 0);
-	setColour(2, 0, 1, 0, 2);
+	setColour(1, 3, 1, 0, 0);
+	setColour(2, 0, 0, 0, 0);
+
+
 
 	while(1){
 
@@ -327,7 +329,7 @@ void refreshDisplay(void){
 
 			bitValue = 1;
 
-			for( uint8_t shiftTimes=0; shiftTimes<channel; shiftTimes++ ){
+			for( uint8_t shiftTimes=2; shiftTimes>channel; shiftTimes-- ){
 
 				//Shift to the correct LED channel
 				bitValue <<= 1;
@@ -435,8 +437,8 @@ void setColour(uint8_t led, uint8_t redCh, uint8_t greenCh, uint8_t blueCh, uint
 	if( blueCh > 7 ){
 		blueCh = 7;
 	}
-	if( dimmerCh > 7 ){
-		dimmerCh = 7;
+	if( dimmerCh > 14 ){
+		dimmerCh = 14;
 	}
 
 	//Copy values to the buffer
