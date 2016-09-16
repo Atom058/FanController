@@ -50,11 +50,11 @@
 
 
 	//Fans' analog channels
-	#define FAN1CH 0b00000000
-	#define FAN2CH 0b00000001
-	#define FAN3CH 0b00000010
-	#define FAN4CH 0b00000011
-	#define FAN5CH 0b00000100
+	#define FAN1CH 1
+	#define FAN2CH 2
+	#define FAN3CH 3
+	#define FAN4CH 4
+	#define FAN5CH 5
 
 	//Minimum current reading to identify active fan
 	#define CONNECTIONTHRESHOLD 2

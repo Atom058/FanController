@@ -174,7 +174,7 @@ void startup(void) {
 	_delay_ms(250); 
 
 	//Read max currents
-	/*fan1CurrentMaxSpeed = readFanCurrent(FAN1CH);
+	fan1CurrentMaxSpeed = readFanCurrent(FAN1CH);
 	fan2CurrentMaxSpeed = readFanCurrent(FAN2CH);
 	fan3CurrentMaxSpeed = readFanCurrent(FAN3CH);
 	fan4CurrentMaxSpeed = readFanCurrent(FAN4CH);
@@ -185,7 +185,7 @@ void startup(void) {
 	fan4Current = fan4CurrentMaxSpeed;
 	fan5Current = fan5CurrentMaxSpeed;
 
-	checkConnection();*/
+	checkConnection();
 
 }
 
@@ -207,7 +207,35 @@ void recordFanCurrents(void) {
 */
 uint16_t readFanCurrent(uint8_t chADC) {
 
-	ADMUX |= chADC;
+	//Adjust analog channel
+	switch(chADC) {
+
+		case 1:
+			ADMUX &= ~(_BV(MUX3) | _BV(MUX2) | _BV(MUX1) | _BV(MUX0));
+			break;
+		
+		case 2:
+			ADMUX &= ~(_BV(MUX3) | _BV(MUX2) | _BV(MUX1));
+			ADMUX |= _BV(MUX0);
+			break;
+		
+		case 3:
+			ADMUX &= ~(_BV(MUX3) | _BV(MUX2) | _BV(MUX0));
+			ADMUX |= _BV(MUX1);
+			break;
+		
+		case 4:
+			ADMUX &= ~(_BV(MUX3) | _BV(MUX2));
+			ADMUX |= _BV(MUX1) | _BV(MUX0);
+			break;
+		
+		case 5:
+			ADMUX &= ~(_BV(MUX3) | _BV(MUX1) | _BV(MUX0));
+			ADMUX |= _BV(MUX2);
+			break;
+
+	}
+
 	ADCSRA |=_BV(ADSC); //Starts conversion
 
 	while( ADCSRA>>ADSC & 1 ); //Waits for conversion to finish
@@ -229,23 +257,38 @@ uint16_t readFanCurrent(uint8_t chADC) {
 void checkConnection(void) {
 
 	if(fan1Current > CONNECTIONTHRESHOLD){
-		connectedFans |= _BV(FAN1CONN);
+		connectedFans |= _BV(FAN1CONN); //Set connection bit
+	} else {
+		connectedFans &= ~(_BV(FAN1CONN)); //unset bit
+		OCR0A = 0; //Turn off connection
 	}
 
 	if(fan2Current > CONNECTIONTHRESHOLD){
-		connectedFans |= _BV(FAN2CONN);
+		connectedFans |= _BV(FAN2CONN); //Set connection bit
+	} else {
+		connectedFans &= ~(_BV(FAN2CONN)); //unset bit
+		OCR0B = 0; //Turn off connection
 	}
 
 	if(fan3Current > CONNECTIONTHRESHOLD){
-		connectedFans |= _BV(FAN3CONN);
+		connectedFans |= _BV(FAN3CONN); //Set connection bit
+	} else {
+		connectedFans &= ~(_BV(FAN3CONN)); //unset bit
+		OCR1AL = 0; //Turn off connection
 	}
 
 	if(fan4Current > CONNECTIONTHRESHOLD){
-		connectedFans |= _BV(FAN4CONN);
+		connectedFans |= _BV(FAN4CONN); //Set connection bit
+	} else {
+		connectedFans &= ~(_BV(FAN4CONN)); //unset bit
+		OCR1BL = 0; //Turn off connection
 	}
 
 	if(fan5Current > CONNECTIONTHRESHOLD){
-		connectedFans |= _BV(FAN5CONN);
+		connectedFans |= _BV(FAN5CONN); //Set connection bit
+	} else {
+		connectedFans &= ~(_BV(FAN5CONN)); //unset bit
+		OCR2A = 0; //Turn off connection
 	}
 
 }
