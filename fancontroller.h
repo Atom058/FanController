@@ -64,6 +64,8 @@
 	#define GREEN 1
 	#define BLUE 2
 
+	#define MAXCHANNELVALUE 7
+
 	//Number of unused bits at the end of the shit registry chain
 	#define SHIFTREGISTEREMPTYBITS 2
 

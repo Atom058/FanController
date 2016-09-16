@@ -415,19 +415,27 @@ uint8_t copyToBuffer(uint8_t led){
 
 }
 
+
+
+/*
+	Method to update the led colours array
+
+	This method is used to trim the values to reasonable limits
+	Maximum bit value is set in h file
+*/
 void setColour(uint8_t led, uint8_t redCh, uint8_t greenCh, uint8_t blueCh, uint8_t dimmerCh){
 
-	if( redCh > 7 ){
-		redCh = 7;
+	if( redCh > MAXCHANNELVALUE ){
+		redCh = MAXCHANNELVALUE;
 	}
-	if( greenCh > 7 ){
-		greenCh = 7;
+	if( greenCh > MAXCHANNELVALUE ){
+		greenCh = MAXCHANNELVALUE;
 	}
-	if( blueCh > 7 ){
-		blueCh = 7;
+	if( blueCh > MAXCHANNELVALUE ){
+		blueCh = MAXCHANNELVALUE;
 	}
-	if( dimmerCh > 14 ){
-		dimmerCh = 14;
+	if( dimmerCh > (2 * MAXCHANNELVALUE) ){
+		dimmerCh = 2 * MAXCHANNELVALUE;
 	}
 
 	//Copy values to the buffer
