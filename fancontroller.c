@@ -40,6 +40,9 @@ uint8_t	buffer[10][4] = {
 		, {0, 0, 0, 0}
 	}; //Array holding current colour of all LED's, used in sweeping the LED's
 
+//Map of linear intensities to Gamma-corrected values
+uint8_t gammaMap[8] = {0, 6, 8, 10, 11, 12, 13, 14};
+
 int main (void) {
 
 	setup();
@@ -507,6 +510,8 @@ uint8_t copyToBuffer(uint8_t led){
 
 	This method is used to trim the values to reasonable limits
 	Maximum bit value is set in h file
+
+	//TODO: this should be gamma corrected. How many bits are needed then?
 */
 void setColour(uint8_t led, uint8_t redCh, uint8_t greenCh, uint8_t blueCh, uint8_t dimmerCh){
 
@@ -524,10 +529,10 @@ void setColour(uint8_t led, uint8_t redCh, uint8_t greenCh, uint8_t blueCh, uint
 	}
 
 	//Copy values to the buffer
-	LEDColours[led][0] = redCh;
-	LEDColours[led][1] = greenCh;
-	LEDColours[led][2] = blueCh;
-	LEDColours[led][3] = dimmerCh;
+	LEDColours[led][0] = gammaMap[redCh];
+	LEDColours[led][1] = gammaMap[greenCh];
+	LEDColours[led][2] = gammaMap[blueCh];
+	LEDColours[led][3] = gammaMap[dimmerCh];
 
 }
 
