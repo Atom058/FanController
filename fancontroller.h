@@ -57,7 +57,7 @@
 	#define FAN5CH 5
 
 	//Minimum current reading to identify active fan
-	#define CONNECTIONTHRESHOLD 256
+	#define CONNECTIONTHRESHOLD 20
 	//Upper current bound allowed. Controls that no short or still fans are present.
 	#define UPPERCURRENTTHRESHOLD 800
 	//Waiting time in µs between unconnected output is turned on and current reading
