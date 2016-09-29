@@ -474,4 +474,5 @@ Connection ~ 1850 3400
 Connection ~ 1850 4250
 NoConn ~ 3900 5100
 NoConn ~ 3900 4150
+NoConn ~ 1350 4350
 $EndSCHEMATC
