@@ -528,7 +528,7 @@ void setColour(uint8_t led, uint8_t redCh, uint8_t greenCh, uint8_t blueCh, uint
 		dimmerCh = 2 * MAXCHANNELVALUE;
 	}
 
-	//Copy values to the buffer
+	//Copy gamma-corrected values to the buffer
 	LEDColours[led][0] = gammaMap[redCh];
 	LEDColours[led][1] = gammaMap[greenCh];
 	LEDColours[led][2] = gammaMap[blueCh];
