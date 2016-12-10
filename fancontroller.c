@@ -53,7 +53,7 @@ int main (void) {
 	//setColour(1, 5, 1, 2, 0);
 	//setColour(2, 0, 0, 0, 0);
 
-	uint32_t shiftBit = 0x80000000;
+	uint32_t shiftBit = 0x80000000; //Test light :)
 	shiftout(shiftBit);
 
 	while(1){
@@ -168,6 +168,8 @@ void startup(void) {
 	OCR2A = ~(0); //Fan #5
 
 	//Let fans spin to full speed
+
+	//Blinking status light
 	_delay_ms(250); 
 	PORTC ^= _BV(PORTC5);
 	_delay_ms(250); 
@@ -575,7 +577,8 @@ void shiftout(uint32_t input){
 */
 ISR(TIMER2_OVF_vect){
 
-	//TEMP - use display as indicator instead refreshDisplay();
+	//TEMP - currently using display as indicator instead. Uncomment below.
+	//refreshDisplay();
 
 }
 
