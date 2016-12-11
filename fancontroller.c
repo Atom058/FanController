@@ -41,23 +41,23 @@ uint8_t	buffer[10][4] = {
 	}; //Array holding current colour of all LED's, used in sweeping the LED's
 
 //Map of linear intensities to Gamma-corrected values
-uint8_t gammaMap[8] = {0, 6, 8, 10, 11, 12, 13, 14};
+uint8_t gammaMap[8] = {0, 2, 3, 4, 5};
 
 int main (void) {
 
 	cli();
 	setup();
 	startup();
-	setColour(1,  1, 0, 0, 0);
-	setColour(2,  0, 1, 0, 0);
-	setColour(3,  0, 0, 1, 0);
-	setColour(4,  1, 1, 0, 0);
-	setColour(5,  1, 0, 1, 0);
-	setColour(6,  3, 1, 0, 0);
-	setColour(7,  5, 1, 0, 0);
-	setColour(8,  7, 1, 0, 0);
-	setColour(9,  1, 3, 0, 0);
-	setColour(10, 1, 5, 0, 0);
+	setColour(0,  1, 0, 0, 0);
+	setColour(1,  0, 0, 0, 0);
+	setColour(2,  1, 0, 0, 0);
+	setColour(3,  0, 0, 0, 0);
+	setColour(4,  1, 0, 0, 0);
+	setColour(5,  0, 0, 0, 0);
+	setColour(6,  1, 0, 0, 0);
+	setColour(7,  0, 0, 0, 0);
+	setColour(8,  1, 1, 1, 0);
+	setColour(9,  4, 0, 1, 0);
 	sei();
 
 	//Testcolours
@@ -592,15 +592,32 @@ void setColour(uint8_t led, uint8_t redCh, uint8_t greenCh, uint8_t blueCh, uint
 	if( blueCh > MAXCHANNELVALUE ){
 		blueCh = MAXCHANNELVALUE;
 	}
-	if( dimmerCh > (2 * MAXCHANNELVALUE) ){
-		dimmerCh = 2 * MAXCHANNELVALUE;
+	if( dimmerCh > MAXCHANNELVALUE ){
+		dimmerCh = MAXCHANNELVALUE;
 	}
 
-	//Copy gamma-corrected values to the buffer
-	LEDColours[led][0] = gammaMap[redCh];
-	LEDColours[led][1] = gammaMap[greenCh];
+	//Copy gamma-corrected values to the buffer, along with brightness corrections
+	if( redCh > 0 ){
+		LEDColours[led][0] = gammaMap[redCh] + REDLEDSHIFT;
+	} else {
+		LEDColours[led][0] = gammaMap[redCh];
+	}
+
+	if( greenCh > 0 ){
+		LEDColours[led][1] = gammaMap[greenCh] + GREENLEDSHIFT;
+	} else {
+		LEDColours[led][1] = gammaMap[greenCh];
+	}
+
+
+	if( blueCh > 0 ){
+		LEDColours[led][2] = gammaMap[blueCh] + BLUELEDSHIFT;
+	} else {
+		LEDColours[led][2] = gammaMap[blueCh];
+	}
+
 	LEDColours[led][2] = gammaMap[blueCh];
-	LEDColours[led][3] = gammaMap[dimmerCh];
+	LEDColours[led][3] = gammaMap[dimmerCh]*4;
 
 }
 

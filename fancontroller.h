@@ -69,7 +69,7 @@
 	#define BLUE 2
 	#define DIMMER 3
 
-	#define MAXCHANNELVALUE 7
+	#define MAXCHANNELVALUE 4
 
 	//Number of unused bits at the end of the shit registry chain
 	#define SHIFTREGISTEREMPTYBITS 2
@@ -85,5 +85,9 @@
 	#define LED08 8
 	#define LED09 9
 	#define LED10 10
+
+	#define REDLEDSHIFT 1
+	#define GREENLEDSHIFT 0
+	#define BLUELEDSHIFT -2
 
 #endif
