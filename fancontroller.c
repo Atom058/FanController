@@ -14,7 +14,7 @@ uint16_t fan5CurrentMaxSpeed = 0;
 
 uint8_t connectedFans = 0;
 
-uint8_t currentColour = RED;
+uint8_t currentColour[10] = RED;
 uint8_t	LEDColours[10][4] = {
 		  {0, 0, 0, 0}
 		, {0, 0, 0, 0}
@@ -50,33 +50,68 @@ int main (void) {
 	startup();
 
 	//Testcolours
-	//setColour(1, 5, 1, 2, 0);
-	//setColour(2, 0, 0, 0, 0);
+	setColour(1,  1, 0, 0, 0);
+	setColour(2,  0, 1, 0, 0);
+	setColour(3,  0, 0, 1, 0);
+	setColour(4,  1, 1, 0, 0);
+	setColour(5,  1, 0, 1, 0);
+	setColour(6,  3, 1, 0, 0);
+	setColour(7,  5, 1, 0, 0);
+	setColour(8,  7, 1, 0, 0);
+	setColour(9,  1, 3, 0, 0);
+	setColour(10, 1, 5, 0, 0);
 
-	uint32_t shiftBit = 0x80000000; //Test light :)
-	shiftout(shiftBit);
+	//uint32_t shiftBit = 0x80000000; //Test light :)
+	//shiftout(shiftBit);
 
 	while(1){
 
+		/*
+		for(uint8_t dimmer=0; dimmer<8; dimmer++){
+
+			for(uint8_t colour=0; colour<8; colour++){
+
+				setColour(1, colour, 0, 0, dimmer); //red
+				setColour(3, 0, colour, 0, dimmer); //red
+				setColour(5, 0, 0, colour, dimmer); //red
+
+				setColour(2, colour, dimmer, 0, 0); //yellow
+				setColour(4, 0, colour, dimmer, 0); //cyan
+
+				setColour(6, colour, colour, dimmer, 0);
+				setColour(7, dimmer, colour, dimmer, 0);
+				setColour(8, dimmer, 0, colour, 0);
+
+				PORTC ^= _BV(PORTC5); //toggle indicator
+				_delay_ms(500);
+
+			}
+
+		}
+		*/
+
+
+		/*
+		//testing rotary encoder input, moving through LEDs
 		if( (PINB>>PINB4 & 1) != 1 ){
 			if( shiftBit>>31 & 1){
-				shiftBit = 0x01000000; //Move to other end
+				shiftBit = 0x00000004; //Move to other end
 			} else{
-				shiftBit <<= 1; //Move one to the left
+				shiftBit <<= 1; //Move one to the right
 			}
 			_delay_ms(DEBOUNCETURN);
 		}
 		if( (PINB>>PINB5 & 1) != 1 ){
-			if( shiftBit>>24 & 1){
+			if( shiftBit>>2 & 1){
 				shiftBit = 0x80000000; //Move to other end
 			} else{
-				shiftBit >>= 1; //Move one to the left
+				shiftBit >>= 1; //Move one to the right
 			}
 			_delay_ms(DEBOUNCETURN);
 		}
 		if( (PINB>>PINB0 & 1) != 1 ){
 			if( shiftBit>>31 & 1){
-				shiftBit = 0x01000000; //Move to end
+				shiftBit = 0x00000004; //Move to end
 			} else{
 				shiftBit = 0x80000000; //Move to begining
 			}
@@ -84,6 +119,8 @@ int main (void) {
 		}
 
 		shiftout(shiftBit);
+		*/
+
 
 	//Rotary encoder input
 	//TODO
@@ -197,25 +234,30 @@ uint16_t readFanCurrent(uint8_t chADC) {
 	switch(chADC) {
 
 		case FAN1CH:
+			//ADC0
 			ADMUX &= ~(_BV(MUX3) | _BV(MUX2) | _BV(MUX1) | _BV(MUX0));
 			break;
 		
 		case FAN2CH:
-			ADMUX &= ~(_BV(MUX3) | _BV(MUX2) | _BV(MUX1));
+			//ADC1
+			ADMUX &= ~(_BV(MUX3) | _BV(MUX2) | _BV(MUX1)); 
 			ADMUX |= _BV(MUX0);
 			break;
 		
 		case FAN3CH:
+			//ADC2
 			ADMUX &= ~(_BV(MUX3) | _BV(MUX2) | _BV(MUX0));
 			ADMUX |= _BV(MUX1);
 			break;
 		
 		case FAN4CH:
+			//ADC3
 			ADMUX &= ~(_BV(MUX3) | _BV(MUX2));
 			ADMUX |= _BV(MUX1) | _BV(MUX0);
 			break;
 		
 		case FAN5CH:
+			//ADC4
 			ADMUX &= ~(_BV(MUX3) | _BV(MUX1) | _BV(MUX0));
 			ADMUX |= _BV(MUX2);
 			break;
@@ -492,9 +534,9 @@ uint8_t copyToBuffer(uint8_t led){
 
 	uint8_t bitsum = LEDColours[led][0] + LEDColours[led][1] + LEDColours[led][2] + LEDColours[led][3];
 
+	//Don't bother copying anything if there is nothing to copy //TODO this is probably less efficient
 	if(bitsum > 0){
 
-		//Don't bother copying anything if there is nothing to copy
 		for( uint8_t i=0;  i<4; i++ ){
 			buffer[led][i] = LEDColours[led][i]; //Copy to buffer
 		}
@@ -578,7 +620,8 @@ void shiftout(uint32_t input){
 ISR(TIMER2_OVF_vect){
 
 	//TEMP - currently using display as indicator instead. Uncomment below.
-	//refreshDisplay();
+	refreshDisplay();
+	PORTC ^= _BV(PORTC5); //toggle indicator
 
 }
 
