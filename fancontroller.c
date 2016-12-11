@@ -14,7 +14,7 @@ uint16_t fan5CurrentMaxSpeed = 0;
 
 uint8_t connectedFans = 0;
 
-uint8_t currentColour[10] = RED;
+uint8_t currentChannel[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 uint8_t	LEDColours[10][4] = {
 		  {0, 0, 0, 0}
 		, {0, 0, 0, 0}
@@ -45,11 +45,9 @@ uint8_t gammaMap[8] = {0, 6, 8, 10, 11, 12, 13, 14};
 
 int main (void) {
 
+	cli();
 	setup();
-
 	startup();
-
-	//Testcolours
 	setColour(1,  1, 0, 0, 0);
 	setColour(2,  0, 1, 0, 0);
 	setColour(3,  0, 0, 1, 0);
@@ -60,6 +58,9 @@ int main (void) {
 	setColour(8,  7, 1, 0, 0);
 	setColour(9,  1, 3, 0, 0);
 	setColour(10, 1, 5, 0, 0);
+	sei();
+
+	//Testcolours
 
 	//uint32_t shiftBit = 0x80000000; //Test light :)
 	//shiftout(shiftBit);
@@ -131,7 +132,7 @@ int main (void) {
 
 void setup(void) {
 
-	cli(); //Disable interrupts temoprarily
+	//cli(); //Disable interrupts temoprarily
 
 		//Set prescaler to 1 (16MHz)
 			CLKPR = _BV(CLKPCE);
@@ -185,7 +186,7 @@ void setup(void) {
 			//Disable digital inputs on Analog pins
 			DIDR0 |= _BV(ADC0D) | _BV(ADC1D) | _BV(ADC2D) | _BV(ADC3D) | _BV(ADC4D);
 
-	sei(); //Enable interrupts again
+	//sei(); //Enable interrupts again
 
 }
 
@@ -216,6 +217,7 @@ void startup(void) {
 	_delay_ms(250); 
 	PORTC ^= _BV(PORTC5);
 	_delay_ms(250); 
+	PORTC &= ~(_BV(PORTC5)); //Turn LED off
 
 	//Store connection status
 	checkConnections(); 
@@ -284,7 +286,7 @@ uint16_t readFanCurrent(uint8_t chADC) {
 */
 void checkConnections(void) {
 
-
+	//TODO rewrite these segments to use universal logic
 
 	/*
 		----- FAN CHANNEL 1 -----
@@ -444,9 +446,11 @@ void checkConnections(void) {
 		The logic is optimized to always never leave gaps in when possible, i.e. to maximze brightness
 		Therefore, the values in the array does not represent true bit values, 
 		but more of relationships between colours: how bright they are in relation to the others.
+		//TODO: this will be remedied in the future, to allow for a more common RGB(a,b,c) format
 
 		There is a fourth channel available to dim the LED, if this is required. 
 		Writing to this channel will output 0 to the shift register
+		//TODO: this should be set automatically by the setColour method in the future
 */
 void refreshDisplay(void){
 
@@ -454,48 +458,69 @@ void refreshDisplay(void){
 	uint32_t output = 0;
 	uint32_t bitValue = 0;
 	uint8_t channel = 0;
+	uint8_t channelSearch = 0;
 
-	for( int led=10; led>0; led-- ){
+	for( int8_t led=0; led<10; led++ ){
 
-		//Search for next data point to display
-		if( buffer[led][0] > 0 ) {
+		//find the channel to display if current channel i empty
+		if( buffer[led][currentChannel[led]] == 0 ){
 
-			buffer[led][0]--; //Reduce count in buffer by one
-			channel = 0;
+			channelSearch = currentChannel[led];
 
-		} else if( buffer[led][1] > 0 ){
+			while(1){
 
-			buffer[led][1]--; //Reduce count in buffer by one
-			channel = 1;
+				if( channelSearch >= DIMMER ){ //start search from the beginning
+					channelSearch = RED;
+				} else {
+					channelSearch += 1;
+				}
 
-		} else if( buffer[led][2] > 0 ){
+				if( buffer[led][channelSearch] > 0){
 
-			buffer[led][2]--; //Reduce count in buffer by one
-			channel = 2;
+					//We found a channel with remaining value, set this to the active channel!
+					currentChannel[led] = channelSearch;
+					break;
 
-		} else if( buffer[led][3] > 0 ){
+				} else if( channelSearch == currentChannel[led] ){
 
-			buffer[led][3]--; //Reduce count in buffer by one
-			channel = 3;
+					//nothing to display (we have looped all channels once) - copy new value to buffer again
+					copyToBuffer(led);
+					
+					//Set the LED to black until we have new data
+					currentChannel[led] = DIMMER;
+					break;
 
-		} else {
+				}
 
-			//Copy new buffer data from colour channel - returns false if LEDcolour has no info
-			if( copyToBuffer(led) ){
 
-				led++; //redo the current loop
-
-			}
-
-			continue; //Continue with next LED -- the current LED will be updated on the next sequence
+			} //while
 
 		}
 
+		//Set the channel to display
+		channel = currentChannel[led];
 
-		if(channel != 3){ //push no data if the channel is empty -- already 0 for all LED outputs
+		//Reduce value in buffer
+		if( buffer[led][currentChannel[led]] != 0 ){
+			buffer[led][currentChannel[led]] -= 1;
+		}
+
+
+		/*
+			Advance to the next colour (done to avoid flickering).
+			This guesses that the next channel contains data, but this will be checked in the next refresh cycle
+		*/
+		if( currentChannel[led] == DIMMER ){
+			currentChannel[led] = RED;
+		} else {
+			currentChannel[led] += 1;
+		}
+
+		if(channel != DIMMER){ //push no data if the channel is empty -- already 0 for all LED outputs
 
 			bitValue = 1;
 
+			//These are a bit ugly, but I couldn't figure out how to shift according to a variable value #CNoobProblems
 			for( uint8_t shiftTimes=2; shiftTimes>channel; shiftTimes-- ){
 
 				//Shift to the correct LED channel
@@ -503,7 +528,7 @@ void refreshDisplay(void){
 
 			}
 
-			for( uint8_t shiftTimes=0; shiftTimes<(10-led); shiftTimes++ ){
+			for( uint8_t shiftTimes=0; shiftTimes<(9-led); shiftTimes++ ){
 
 				//Shift the output 3 times to the right for each LED (RGB LED)
 				bitValue <<= 3; //Shift value to correct position
@@ -513,7 +538,6 @@ void refreshDisplay(void){
 			output |= bitValue; //Merge the bit with the output
 
 		}
-
 
 	}
 
