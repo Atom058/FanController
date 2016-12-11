@@ -88,6 +88,6 @@
 
 	#define REDLEDSHIFT 1
 	#define GREENLEDSHIFT 0
-	#define BLUELEDSHIFT -2
+	#define BLUELEDSHIFT 0
 
 #endif

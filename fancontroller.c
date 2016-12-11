@@ -41,23 +41,23 @@ uint8_t	buffer[10][4] = {
 	}; //Array holding current colour of all LED's, used in sweeping the LED's
 
 //Map of linear intensities to Gamma-corrected values
-uint8_t gammaMap[8] = {0, 2, 3, 4, 5};
+uint8_t gammaMap[8] = {0, 1, 4, 6, 8};
 
 int main (void) {
 
 	cli();
 	setup();
 	startup();
-	setColour(0,  1, 0, 0, 0);
-	setColour(1,  0, 0, 0, 0);
-	setColour(2,  1, 0, 0, 0);
-	setColour(3,  0, 0, 0, 0);
-	setColour(4,  1, 0, 0, 0);
-	setColour(5,  0, 0, 0, 0);
-	setColour(6,  1, 0, 0, 0);
-	setColour(7,  0, 0, 0, 0);
+	setColour(0,  1, 1, 1, 0);
+	setColour(1,  1, 1, 1, 0);
+	setColour(2,  1, 1, 1, 0);
+	setColour(3,  1, 1, 1, 0);
+	setColour(4,  1, 1, 1, 0);
+	setColour(5,  1, 1, 1, 0);
+	setColour(6,  1, 1, 1, 0);
+	setColour(7,  1, 1, 1, 0);
 	setColour(8,  1, 1, 1, 0);
-	setColour(9,  4, 0, 1, 0);
+	setColour(9,  1, 1, 1, 0);
 	sei();
 
 	//Testcolours
