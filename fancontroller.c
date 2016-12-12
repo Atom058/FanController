@@ -208,19 +208,20 @@ void startup(void) {
 	//Let fans spin to full speed
 
 	//Blinking status light
-	_delay_ms(250); 
-	PORTC ^= _BV(PORTC5);
-	_delay_ms(250); 
-	PORTC ^= _BV(PORTC5);
-	_delay_ms(250); 
-	PORTC ^= _BV(PORTC5);
-	_delay_ms(250); 
-	PORTC ^= _BV(PORTC5);
-	_delay_ms(250); 
-	PORTC &= ~(_BV(PORTC5)); //Turn LED off
+	uint8_t time = STARTUPFANWARMINGINDICATORINTERVAL;
+
+	for(int i=0; i<=STARTUPFANWARMINGPERIOD;){
+
+		PORTC ^= _BV(PORTC5);
+		_delay_ms(time); 
+		i += time;
+
+	}
 
 	//Store connection status
-	checkConnections(); 
+	checkConnections();
+
+	PORTC &= ~(_BV(PORTC5)); //Ensure that the LED is off
 
 }
 
