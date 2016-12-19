@@ -47,7 +47,6 @@ int main (void) {
 
 	cli();
 	setup();
-	startup();
 	setColour(0,  3, 3, 3, 0);
 	setColour(1,  3, 3, 3, 0);
 	setColour(2,  3, 3, 3, 0);
@@ -58,6 +57,8 @@ int main (void) {
 	setColour(7,  3, 3, 3, 0);
 	setColour(8,  3, 3, 3, 0);
 	setColour(9,  3, 3, 3, 0);
+	refreshDisplay();
+	startup();
 	sei();
 
 	//Testcolours
