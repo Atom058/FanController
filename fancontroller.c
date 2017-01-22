@@ -462,6 +462,19 @@ void refreshDisplay(void){
 	uint8_t channel = 0;
 	uint8_t channelSearch = 0;
 
+	/*
+		Routine for searching for the next colour to display.
+
+		The loop looks looks in the LED buffer sequentially (in sequence RED, GREEN, BLUE, DIMMER).
+			If there is a value in any of these positions in the dimmer array, this will be saved 
+			as the current output of the specified LED. If the channel DIMMER is chosen, there will 
+			be a gap in the output. //TODO: remove dimmer channel?
+
+		Each time the loop uses a value in the buffer, it is decreased by 1 unit. After one colour
+			channel is used up, the loop will continue on to the next colour channel. When all
+			channels are used up (i.e. the read zero), a new buffer is copied from the 
+			LEDColours-array.
+	*/
 	for( int8_t led=0; led<10; led++ ){
 
 		//find the channel to display if current channel i empty
