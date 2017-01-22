@@ -1,5 +1,8 @@
 #include <fancontroller.h>
 
+//Timer unit, updated by WD timer approximately every 16ms
+uint16_t looptime = 0;
+
 uint16_t fan1Current = 0;
 uint16_t fan2Current = 0;
 uint16_t fan3Current = 0;
@@ -165,6 +168,16 @@ void setup(void) {
 		//Set inputs for rotary encoder - all inputs with pull-ups
 			//PB0/P14 button, PB4/P18 Left. PB5/P19 Right
 			PORTB |= _BV(PORTB0) | _BV(PORTB4) | _BV(PORTB5); //Activate pullups
+			//Enable interrupts for inputs
+			PCICR |= _BV(PCIE2) | _BV(PCIE1); //Interrupts enabled for ports 8-14 & 16-23
+			PCMSK2 |= _BV(PCINT19) | _BV(PCINT18); //Interrupts for pin 18 and 19
+			PCMSK1 |= _BV(PCINT14); //Interrupts for pin 14
+
+		//Enable watchdog timer -- useful for time-keeping
+			MCUSR &= ~(_BV(WDRF)); //Reset WD interrupt
+			WDTCSR |= _BV(WDCE) | _BV(WDE); //Unlock WD setting
+			WDTCSR = 0x00; //Clear WDE, and set new prescaler to 0-0-0-0
+			WDTCSR |= WDIE; //Enable WD interrupt mode
 			
 		//Set Outputs for shift register
 			DDRD |= _BV(DDD0) |	_BV(DDD1) |	_BV(DDD2) |	_BV(DDD3) |	_BV(DDD4);
@@ -172,7 +185,7 @@ void setup(void) {
 			PORTD &= ~(_BV(PORTD4)); //Enable output
 
 		//Disable pin 28 / PC6 by enabling internal pull-up (in input configuration)
-			DDRC |= _BV(DDC5); //Currently used as power on signal
+			DDRC |= _BV(DDC5); //Currently used as power on signal, as well as diagnostics
 			PORTC |= _BV(PORTC5);
 		//Disable pin 13 by enabling internal pull-up
 			PORTD |= _BV(PORTD7);
@@ -662,9 +675,16 @@ void shiftout(uint32_t input){
 
 }
 
+//Rotary encoder interrupts
+ISR(PCINT1_vect){
 
+}
+ISR(PCINT2_vect, ISR_ALIASOF(PCINT1_vect));
 
-
+//WD timer update
+ISR(WDT_vect){
+	looptime++;
+}
 
 /*
 	LED refresh timout:
