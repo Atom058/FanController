@@ -15,29 +15,29 @@ uint16_t fan5CurrentMaxSpeed = 0;
 uint8_t connectedFans = 0;
 
 uint8_t currentChannel[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-uint8_t	LEDColours[10][4] = {
-		  {0, 0, 0, 0}
-		, {0, 0, 0, 0}
-		, {0, 0, 0, 0}
-		, {0, 0, 0, 0}
-		, {0, 0, 0, 0}
-		, {0, 0, 0, 0}
-		, {0, 0, 0, 0}
-		, {0, 0, 0, 0}
-		, {0, 0, 0, 0}
-		, {0, 0, 0, 0}
+uint8_t	LEDColours[10][3] = {
+		  {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
 	}; //Array holding current colour of all LED's, as well as a dimmer channel
-uint8_t	buffer[10][4] = {
-		  {0, 0, 0, 0}
-		, {0, 0, 0, 0}
-		, {0, 0, 0, 0}
-		, {0, 0, 0, 0}
-		, {0, 0, 0, 0}
-		, {0, 0, 0, 0}
-		, {0, 0, 0, 0}
-		, {0, 0, 0, 0}
-		, {0, 0, 0, 0}
-		, {0, 0, 0, 0}
+uint8_t	buffer[10][3] = {
+		  {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
+		, {0, 0, 0}
 	}; //Array holding current colour of all LED's, used in sweeping the LED's
 
 //Map of linear intensities to Gamma-corrected values
@@ -47,16 +47,16 @@ int main (void) {
 
 	cli();
 	setup();
-	setColour(0,  3, 3, 3, 0);
-	setColour(1,  3, 3, 3, 0);
-	setColour(2,  3, 3, 3, 0);
-	setColour(3,  3, 3, 3, 0);
-	setColour(4,  3, 3, 3, 0);
-	setColour(5,  3, 3, 3, 0);
-	setColour(6,  3, 3, 3, 0);
-	setColour(7,  3, 3, 3, 0);
-	setColour(8,  3, 3, 3, 0);
-	setColour(9,  3, 3, 3, 0);
+	setColour(0,  3, 3, 3);
+	setColour(1,  3, 3, 3);
+	setColour(2,  3, 3, 3);
+	setColour(3,  3, 3, 3);
+	setColour(4,  3, 3, 3);
+	setColour(5,  3, 3, 3);
+	setColour(6,  3, 3, 3);
+	setColour(7,  3, 3, 3);
+	setColour(8,  3, 3, 3);
+	setColour(9,  3, 3, 3);
 	refreshDisplay();
 	startup();
 	sei();
@@ -484,7 +484,7 @@ void refreshDisplay(void){
 
 			while(1){
 
-				if( channelSearch >= DIMMER ){ //start search from the beginning
+				if( channelSearch >= BLUE ){ //start search from the beginning
 					channelSearch = RED;
 				} else {
 					channelSearch += 1;
@@ -498,7 +498,7 @@ void refreshDisplay(void){
 
 				} else if( channelSearch == currentChannel[led] ){
 
-					//nothing to display (we have looped all channels once) - copy new value to buffer again
+					//nothing to display (we have looped all channels once): copy new value to buffer again
 					copyToBuffer(led);
 					
 					//Set the LED to black until we have new data
@@ -515,17 +515,18 @@ void refreshDisplay(void){
 		//Set the channel to display
 		channel = currentChannel[led];
 
-		//Reduce value in buffer
-		if( buffer[led][currentChannel[led]] != 0 ){
+		//Reduce value in buffer if it is a colour channel
+		//TODO: this if-check shouldn't be needed?
+		if( currentChannel[led] != DIMMER && buffer[led][currentChannel[led]] != 0 ){
 			buffer[led][currentChannel[led]] -= 1;
 		}
 
-
 		/*
-			Advance to the next colour (done to avoid flickering).
-			This guesses that the next channel contains data, but this will be checked in the next refresh cycle
+			Advance to the next colour (avoids flickering).
+			This guesses that the next channel contains display data.
+			This is checked in the initial loop during the next refresh cycle.
 		*/
-		if( currentChannel[led] == DIMMER ){
+		if( currentChannel[led] >= BLUE ){
 			currentChannel[led] = RED;
 		} else {
 			currentChannel[led] += 1;
@@ -536,14 +537,17 @@ void refreshDisplay(void){
 			bitValue = 1;
 
 			//These are a bit ugly, but I couldn't figure out how to shift according to a variable value #CNoobProblems
-			for( uint8_t shiftTimes=2; shiftTimes>channel; shiftTimes-- ){
+
+			//Shift to correct colour channel
+			for( uint8_t shiftTimes = 2; shiftTimes > channel; shiftTimes-- ){
 
 				//Shift to the correct LED channel
 				bitValue <<= 1;
 
 			}
 
-			for( uint8_t shiftTimes=0; shiftTimes<(9-led); shiftTimes++ ){
+			//Shift to correct LED
+			for( uint8_t shiftTimes = 0; shiftTimes < (9 - led); shiftTimes++ ){
 
 				//Shift the output 3 times to the right for each LED (RGB LED)
 				bitValue <<= 3; //Shift value to correct position
@@ -565,18 +569,18 @@ void refreshDisplay(void){
 /*
 	Copies LEDColours data into the buffer, which is used for keeping track of screen refresh
 
-	Returns: 
+	Returns: //TODO: probably won't be needed later?
 		0 if no bytes was copied
 		>=1 if data was copied
 */
 uint8_t copyToBuffer(uint8_t led){
 
-	uint8_t bitsum = LEDColours[led][0] + LEDColours[led][1] + LEDColours[led][2] + LEDColours[led][3];
+	uint8_t bitsum = LEDColours[led][0] + LEDColours[led][1] + LEDColours[led][2];
 
 	//Don't bother copying anything if there is nothing to copy //TODO this is probably less efficient
 	if(bitsum > 0){
 
-		for( uint8_t i=0;  i<4; i++ ){
+		for( uint8_t i = 0; i < 3; i++ ){
 			buffer[led][i] = LEDColours[led][i]; //Copy to buffer
 		}
 
@@ -596,7 +600,7 @@ uint8_t copyToBuffer(uint8_t led){
 
 	//TODO: this should be gamma corrected. How many bits are needed then?
 */
-void setColour(uint8_t led, uint8_t redCh, uint8_t greenCh, uint8_t blueCh, uint8_t dimmerCh){
+void setColour(uint8_t led, uint8_t redCh, uint8_t greenCh, uint8_t blueCh){
 
 	if( redCh > MAXCHANNELVALUE ){
 		redCh = MAXCHANNELVALUE;
@@ -606,9 +610,6 @@ void setColour(uint8_t led, uint8_t redCh, uint8_t greenCh, uint8_t blueCh, uint
 	}
 	if( blueCh > MAXCHANNELVALUE ){
 		blueCh = MAXCHANNELVALUE;
-	}
-	if( dimmerCh > MAXCHANNELVALUE ){
-		dimmerCh = MAXCHANNELVALUE;
 	}
 
 	//Copy gamma-corrected values to the buffer, along with brightness corrections
@@ -630,9 +631,6 @@ void setColour(uint8_t led, uint8_t redCh, uint8_t greenCh, uint8_t blueCh, uint
 	} else {
 		LEDColours[led][2] = gammaMap[blueCh];
 	}
-
-	LEDColours[led][2] = gammaMap[blueCh];
-	LEDColours[led][3] = gammaMap[dimmerCh]*4;
 
 }
 
