@@ -1,67 +1,70 @@
 #include <fancontroller.h>
 
+
 //Timer unit, updated by WD timer approximately every 16ms
-uint16_t looptime = 0;
+	uint16_t looptime = 0;
 
-uint16_t fan1Current = 0;
-uint16_t fan2Current = 0;
-uint16_t fan3Current = 0;
-uint16_t fan4Current = 0;
-uint16_t fan5Current = 0;
+//Fan status
+	uint16_t fan1Current = 0;
+	uint16_t fan2Current = 0;
+	uint16_t fan3Current = 0;
+	uint16_t fan4Current = 0;
+	uint16_t fan5Current = 0;
 
-uint16_t fan1CurrentMaxSpeed = 0;
-uint16_t fan2CurrentMaxSpeed = 0;
-uint16_t fan3CurrentMaxSpeed = 0;
-uint16_t fan4CurrentMaxSpeed = 0;
-uint16_t fan5CurrentMaxSpeed = 0;
+	uint16_t fan1CurrentMaxSpeed = 0;
+	uint16_t fan2CurrentMaxSpeed = 0;
+	uint16_t fan3CurrentMaxSpeed = 0;
+	uint16_t fan4CurrentMaxSpeed = 0;
+	uint16_t fan5CurrentMaxSpeed = 0;
 
-uint8_t connectedFans = 0;
+	uint8_t connectedFans = 0;
+	uint8_t currentProfile = HPROFILE;
 
-uint8_t currentChannel[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-uint8_t	LEDColours[10][3] = {
-		  {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-	}; //Array holding current colour of all LED's, as well as a dimmer channel
-uint8_t	buffer[10][3] = {
-		  {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-		, {0, 0, 0}
-	}; //Array holding current colour of all LED's, used in sweeping the LED's
+//LED display variables
+	uint8_t currentChannel[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	uint8_t	LEDColours[10][3] = {
+			  {0, 0, 0}
+			, {0, 0, 0}
+			, {0, 0, 0}
+			, {0, 0, 0}
+			, {0, 0, 0}
+			, {0, 0, 0}
+			, {0, 0, 0}
+			, {0, 0, 0}
+			, {0, 0, 0}
+			, {0, 0, 0}
+		}; //Array holding current colour of all LED's, as well as a dimmer channel
+	uint8_t	buffer[10][3] = {
+			  {0, 0, 0}
+			, {0, 0, 0}
+			, {0, 0, 0}
+			, {0, 0, 0}
+			, {0, 0, 0}
+			, {0, 0, 0}
+			, {0, 0, 0}
+			, {0, 0, 0}
+			, {0, 0, 0}
+			, {0, 0, 0}
+		}; //Array holding current colour of all LED's, used in sweeping the LED's
 
-//Map of linear intensities to Gamma-corrected values
-uint8_t gammaMap[8] = {0, 2, 4, 5, 6, 7};
+	//Map of linear intensities to Gamma-corrected values
+	uint8_t gammaMap[8] = {0, 2, 4, 5, 6, 7};
+
+//Interface status
+	uint8_t currentView = VIEWSTART;
+	uint8_t cursorPosition = LED01;
+
+	//Default colour settings
+	uint8_t noColour[3] = {0, 0, 0};
+	uint8_t primaryColour[3] = {5, 0, 0};
+	uint8_t complementColour[3] = {0, 5, 0};
+	uint8_t selectColour[3] = {0, 0, 5};
 
 int main (void) {
 
 	cli();
-	setup();
-	setColour(0,  3, 3, 3);
-	setColour(1,  3, 3, 3);
-	setColour(2,  3, 3, 3);
-	setColour(3,  3, 3, 3);
-	setColour(4,  3, 3, 3);
-	setColour(5,  3, 3, 3);
-	setColour(6,  3, 3, 3);
-	setColour(7,  3, 3, 3);
-	setColour(8,  3, 3, 3);
-	setColour(9,  3, 3, 3);
-	refreshDisplay();
-	startup();
+	setup(); //Set up arduino
+	startup(); //Initiate fan controller
 	sei();
 
 	//Testcolours
@@ -176,7 +179,7 @@ void setup(void) {
 		//Enable watchdog timer -- useful for time-keeping
 			MCUSR &= ~(_BV(WDRF)); //Reset WD interrupt
 			WDTCSR |= _BV(WDCE) | _BV(WDE); //Unlock WD setting
-			WDTCSR = 0x00; //Clear WDE, and set new prescaler to 0-0-0-0
+			WDTCSR = 0x00; //Clear WDE, and set new prescaler to 0-0-0-0, i.e. 16ms
 			WDTCSR |= WDIE; //Enable WD interrupt mode
 			
 		//Set Outputs for shift register
@@ -219,7 +222,7 @@ void startup(void) {
 	OCR1BL = ~(0); //Fan #4
 	OCR2A = ~(0); //Fan #5
 
-	//Let fans spin to full speed
+	//Let the fans spin to full speed
 
 	//Blinking status light
 	uint8_t time = STARTUPFANWARMINGINDICATORINTERVAL;
@@ -237,8 +240,16 @@ void startup(void) {
 
 	PORTC &= ~(_BV(PORTC5)); //Ensure that the LED is off
 
+	updateInterface();
+
 }
 
+
+/* ------------------------
+
+[Fan functions]
+
+--------------------------- */
 
 
 /*
@@ -450,7 +461,11 @@ void checkConnections(void) {
 }
 
 
+/* ------------------------
 
+[LED functions]
+
+--------------------------- */
 
 
 /*
@@ -646,6 +661,24 @@ void setColour(uint8_t led, uint8_t redCh, uint8_t greenCh, uint8_t blueCh){
 	}
 
 }
+/*
+	Quick way to update all ten LEDs to the same colour
+*/
+void setAllColours(uint8_t redCh, uint8_t greenCh, uint8_t blueCh){
+
+	for(uint8_t i=0; i<10; i++){
+		setColour(i, redCh, greenCh, blueCh);
+	}
+
+}
+/*
+	Quick way to update all ten LEDs to the same colour
+*/
+void setColourType(uint8_t led, uint8_t type[3]){
+
+	setColour(led, type[0], type[1], type[2]);
+
+}
 
 
 /*
@@ -675,6 +708,97 @@ void shiftout(uint32_t input){
 
 }
 
+
+/* ------------------------
+
+[Interface functions]
+
+--------------------------- */
+
+/*
+	Parses the current interface situation to the display
+*/
+void updateInterface(void){
+
+	switch(currentView){
+
+		case VIEWSTART:
+			
+			//set to black
+			setAllColours(0, 0, 0);
+			
+			if(connectedFans>>FAN1CONN & 1)
+				setColourType(LED01, primaryColour);
+			if(connectedFans>>FAN2CONN & 1)
+				setColourType(LED03, primaryColour);
+			if(connectedFans>>FAN3CONN & 1)
+				setColourType(LED05, primaryColour);
+			if(connectedFans>>FAN4CONN & 1)
+				setColourType(LED07, primaryColour);
+			if(connectedFans>>FAN5CONN & 1)
+				setColourType(LED09, primaryColour);
+
+			break;
+
+		case VIEWSETTINGS:
+
+			//Fan part
+			if(connectedFans>>FAN1CONN & 1)
+				setColourType(LED01, primaryColour);
+			if(connectedFans>>FAN2CONN & 1)
+				setColourType(LED02, primaryColour);
+			if(connectedFans>>FAN3CONN & 1)
+				setColourType(LED03, primaryColour);
+			if(connectedFans>>FAN4CONN & 1)
+				setColourType(LED04, primaryColour);
+			if(connectedFans>>FAN5CONN & 1)
+				setColourType(LED05, primaryColour);
+
+			//Gap LED
+			setColourType(LED06, noColour);
+
+			//Currentprofile
+			if(currentProfile == LPROFILE)
+				setColourType(LED07, primaryColour);
+			else 
+				setColourType(LED07, complementColour);
+
+			if(currentProfile == MPROFILE)
+				setColourType(LED07, primaryColour);
+			else 
+				setColourType(LED07, complementColour);
+
+			if(currentProfile == HPROFILE)
+				setColourType(LED07, primaryColour);
+			else 
+				setColourType(LED07, complementColour);
+
+			//Cursor position
+
+			if(cursorPosition != LED06)
+				setColourType(cursorPosition, selectColour);
+
+			break;
+
+		case VIEWSETFAN:
+
+			break;
+		case VIEWCOLOURS:
+
+			break;
+	}
+
+}
+
+
+
+/* ------------------------
+
+[ATMEL Interrupt functions] 
+
+--------------------------- */
+
+
 //Rotary encoder interrupts
 ISR(PCINT1_vect){
 
@@ -695,7 +819,7 @@ ISR(TIMER2_OVF_vect){
 
 	//TEMP - currently using display as indicator instead. Uncomment below.
 	refreshDisplay();
-	PORTC ^= _BV(PORTC5); //toggle indicator
+	PORTC ^= _BV(PORTC5); //toggle indicator, physical way to measure the update frequency!
 
 }
 

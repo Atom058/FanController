@@ -7,15 +7,26 @@
 	#include <avr/eeprom.h>
 	#include <util/delay.h>
 
-	//Function delcarations
+	//General functions
 	void setup(void);
 	void startup(void);
-	uint16_t readFanCurrent(uint8_t channel);;
+
+	//Fan functions
+	uint16_t readFanCurrent(uint8_t channel);
 	void checkConnections(void);
+
+	//Display functions
 	void refreshDisplay(void);
 	uint8_t copyToBuffer(uint8_t LED);
 	void setColour(uint8_t led, uint8_t redCh, uint8_t greenCh, uint8_t blueCh);
+	void setAllColours(uint8_t redCh, uint8_t greenCh, uint8_t blueCh);
+	void setColourType(uint8_t led, uint8_t colour[3]);
 	void shiftout(uint32_t input);
+
+	//Interface Function
+	void updateInterface(void);
+	uint8_t parseInput(uint8_t input);
+	
 
 	//PORT LOCATIONS
 		//Shift registry
@@ -37,11 +48,16 @@
 			// Location of: FAN4PWM OCR1B / P16 / PB2
 			// Location of: FAN5PWM OCR2A / P17 / PB3
 
-	#define DEBOUNCETURN 150
-	#define DEBOUNCEBUTTON 250
-
+	//Startup timings
 	#define STARTUPFANWARMINGPERIOD 4000
 	#define STARTUPFANWARMINGINDICATORINTERVAL 250
+
+	//Timing functions
+	#define WDTTIMOUT 16
+
+	#define DEBOUNCETURN 150 
+	#define DEBOUNCEBUTTON 250
+
 
 	//Storage of fan status
 	#define FAN1CONN 0
@@ -49,7 +65,6 @@
 	#define FAN3CONN 2
 	#define FAN4CONN 3
 	#define FAN5CONN 4
-
 
 	//Fans' analog channels
 	#define FAN1CH 1
@@ -64,6 +79,11 @@
 	#define UPPERCURRENTTHRESHOLD 800
 	//Waiting time in µs between unconnected output is turned on and current reading
 	#define UNCONNECTEDFANSTARTUPTIME 50
+
+	//Fan profile constants
+	#define LPROFILE 0
+	#define MPROFILE 1
+	#define HPROFILE 2
 
 	//Colour synonyms
 	#define RED 0
@@ -81,15 +101,21 @@
 	#define SHIFTREGISTEREMPTYBITS 2
 
 	//Synonyms for LED's
-	#define LED01 1
-	#define LED02 2
-	#define LED03 3
-	#define LED04 4
+	#define LED01 9
+	#define LED02 8
+	#define LED03 7
+	#define LED04 6
 	#define LED05 5
-	#define LED06 6
-	#define LED07 7
-	#define LED08 8
-	#define LED09 9
-	#define LED10 10
+	#define LED06 4
+	#define LED07 3
+	#define LED08 2
+	#define LED09 1
+	#define LED10 0
+
+	//Interface view status
+	#define VIEWSTART 0
+	#define VIEWSETTINGS 1
+	#define VIEWSETFAN 2
+	#define VIEWCOLOURS 3
 
 #endif
