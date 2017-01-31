@@ -19,6 +19,13 @@
 
 	uint8_t connectedFans = 0;
 	uint8_t currentProfile = HPROFILE;
+	uint8_t fanProfileSpeeds[5][3] = {
+		  {10, 10, 10}
+		, {10, 10, 10}
+		, {10, 10, 10}
+		, {10, 10, 10}
+		, {10, 10, 10}
+	};
 
 //LED display variables
 	uint8_t currentChannel[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -53,6 +60,10 @@
 //Interface status
 	uint8_t currentView = VIEWSTART;
 	uint8_t cursorPosition = LED01;
+
+	uint8_t adjustFAN = FAN1; //For the view setting fan-speed
+	uint8_t adjustColourType = LED01; //For the view setting LED colour
+	uint8_t adjustColourCh = RCH; //For the view setting LED colour
 
 	//Default colour settings
 	uint8_t noColour[3] = {0, 0, 0};
@@ -319,7 +330,7 @@ void checkConnections(void) {
 	*/
 
 		//Check if this output has a newly connected fan
-		if((connectedFans>>FAN1CONN & 1) != 0){
+		if((connectedFans>>FAN1 & 1) != 0){
 
 			//Check if there is any current draw with output on
 			OCR0A = 255; //Turn on fan at full speed
@@ -336,7 +347,7 @@ void checkConnections(void) {
 
 		if( fan1Current < CONNECTIONTHRESHOLD ){
 
-			connectedFans &= ~(_BV(FAN1CONN)); //unset bit
+			connectedFans &= ~(_BV(FAN1)); //unset bit
 			OCR0A = 0; //Reset timer
 			DDRD &= ~(_BV(DDD5)); //Turn off output
 			
@@ -348,7 +359,7 @@ void checkConnections(void) {
 	*/
 
 		//Check if this output has a newly connected fan
-		if((connectedFans>>FAN2CONN & 1) != 0){
+		if((connectedFans>>FAN2 & 1) != 0){
 
 			//Check if there is any current draw with output on
 			OCR0B = 255; //Turn on fan at full speed
@@ -365,7 +376,7 @@ void checkConnections(void) {
 
 		if( fan2Current < CONNECTIONTHRESHOLD ){
 
-			connectedFans &= ~(_BV(FAN2CONN)); //unset bit
+			connectedFans &= ~(_BV(FAN2)); //unset bit
 			OCR0B = 0; //Reset timer
 			DDRD &= ~(_BV(DDD6)); //Turn off output
 			
@@ -377,7 +388,7 @@ void checkConnections(void) {
 	*/
 
 		//Check if this output has a newly connected fan
-		if((connectedFans>>FAN3CONN & 1) != 0){
+		if((connectedFans>>FAN3 & 1) != 0){
 
 			//Check if there is any current draw with output on
 			OCR1AL = 255; //Turn on fan at full speed
@@ -394,7 +405,7 @@ void checkConnections(void) {
 
 		if( fan3Current < CONNECTIONTHRESHOLD ){
 
-			connectedFans &= ~(_BV(FAN3CONN)); //unset bit
+			connectedFans &= ~(_BV(FAN3)); //unset bit
 			OCR1AL = 0; //Reset timer
 			DDRB &= ~(_BV(DDB1)); //Turn off output
 			
@@ -406,7 +417,7 @@ void checkConnections(void) {
 	*/
 
 		//Check if this output has a newly connected fan
-		if((connectedFans>>FAN4CONN & 1) != 0){
+		if((connectedFans>>FAN4 & 1) != 0){
 
 			//Check if there is any current draw with output on
 			OCR1BL = 255; //Turn on fan at full speed
@@ -423,7 +434,7 @@ void checkConnections(void) {
 
 		if( fan4Current < CONNECTIONTHRESHOLD ){
 
-			connectedFans &= ~(_BV(FAN4CONN)); //unset bit
+			connectedFans &= ~(_BV(FAN4)); //unset bit
 			OCR1BL = 0; //Reset timer
 			DDRB &= ~(_BV(DDB2)); //Turn off output
 			
@@ -435,7 +446,7 @@ void checkConnections(void) {
 	*/
 
 		//Check if this output has a newly connected fan
-		if((connectedFans>>FAN5CONN & 1) != 0){
+		if((connectedFans>>FAN5 & 1) != 0){
 
 			//Check if there is any current draw with output on
 			OCR2A = 255; //Turn on fan at full speed
@@ -452,7 +463,7 @@ void checkConnections(void) {
 
 		if( fan5Current < CONNECTIONTHRESHOLD ){
 
-			connectedFans &= ~(_BV(FAN5CONN)); //unset bit
+			connectedFans &= ~(_BV(FAN5)); //unset bit
 			OCR2A = 0; //Reset timer
 			DDRB &= ~(_BV(DDB3)); //Turn off output
 			
@@ -674,6 +685,14 @@ void setAllColours(uint8_t redCh, uint8_t greenCh, uint8_t blueCh){
 /*
 	Quick way to update all ten LEDs to the same colour
 */
+void setAllColoursToType(uint8_t type[3]){
+
+	setAllColours(type[0], type[1], type[2]);
+
+}
+/*
+	Quick way to update all ten LEDs to the same colour
+*/
 void setColourType(uint8_t led, uint8_t type[3]){
 
 	setColour(led, type[0], type[1], type[2]);
@@ -720,38 +739,39 @@ void shiftout(uint32_t input){
 */
 void updateInterface(void){
 
+	//Reset display, ready to draw new picture!
+	setAllColours(0, 0, 0);
+
 	switch(currentView){
 
 		case VIEWSTART:
-			
-			//set to black
-			setAllColours(0, 0, 0);
-			
-			if(connectedFans>>FAN1CONN & 1)
+
+			if(connectedFans>>FAN1 & 1)
 				setColourType(LED01, primaryColour);
-			if(connectedFans>>FAN2CONN & 1)
+			if(connectedFans>>FAN2 & 1)
 				setColourType(LED03, primaryColour);
-			if(connectedFans>>FAN3CONN & 1)
+			if(connectedFans>>FAN3 & 1)
 				setColourType(LED05, primaryColour);
-			if(connectedFans>>FAN4CONN & 1)
+			if(connectedFans>>FAN4 & 1)
 				setColourType(LED07, primaryColour);
-			if(connectedFans>>FAN5CONN & 1)
+			if(connectedFans>>FAN5 & 1)
 				setColourType(LED09, primaryColour);
 
 			break;
 
 		case VIEWSETTINGS:
+			//[F1 F2 F3 F4 F5 0 P1 P2 P3]		
 
 			//Fan part
-			if(connectedFans>>FAN1CONN & 1)
+			if(connectedFans>>FAN1 & 1)
 				setColourType(LED01, primaryColour);
-			if(connectedFans>>FAN2CONN & 1)
+			if(connectedFans>>FAN2 & 1)
 				setColourType(LED02, primaryColour);
-			if(connectedFans>>FAN3CONN & 1)
+			if(connectedFans>>FAN3 & 1)
 				setColourType(LED03, primaryColour);
-			if(connectedFans>>FAN4CONN & 1)
+			if(connectedFans>>FAN4 & 1)
 				setColourType(LED04, primaryColour);
-			if(connectedFans>>FAN5CONN & 1)
+			if(connectedFans>>FAN5 & 1)
 				setColourType(LED05, primaryColour);
 
 			//Gap LED
@@ -774,7 +794,6 @@ void updateInterface(void){
 				setColourType(LED07, complementColour);
 
 			//Cursor position
-
 			if(cursorPosition != LED06)
 				setColourType(cursorPosition, selectColour);
 
@@ -782,8 +801,194 @@ void updateInterface(void){
 
 		case VIEWSETFAN:
 
+			if(fanProfileSpeeds[adjustFAN][currentProfile] > 10){
+
+				//Input sanitation for eventual loop!
+				fanProfileSpeeds[adjustFAN][currentProfile] = 10;
+
+			} else if(fanProfileSpeeds[adjustFAN][currentProfile] == 0){
+
+				//If fan speed is 0 display all LED as comp colour!
+				setAllColoursToType(complementColour);
+
+			}
+
+			//Light up LEDs according to power setting
+			for(uint8_t i=0; i<fanProfileSpeeds[adjustFAN][currentProfile]; i++){
+				setColourType(9-i, primaryColour);
+			}
+
 			break;
-		case VIEWCOLOURS:
+
+		case VIEWCOLOUROVERVIEW:
+			//[P PS 0 C CS 0 S SS 0 E]
+
+			setColourType(LED01, primaryColour);
+			// setColourType(LED02, primaryColour);
+			
+			setColourType(LED04, complementColour);
+			// setColourType(LED05, complementColour);
+			
+			setColourType(LED07, selectColour);
+			// setColourType(LED08, selectColour);
+
+			if(
+				   cursorPosition == LED02
+				|| cursorPosition == LED05
+				|| cursorPosition == LED08
+				|| cursorPosition == LED10
+			){
+				setColourType(cursorPosition, selectColour);
+			}
+
+			break;
+
+		case VIEWCOLOURSETTING:
+			//[R R G G B B 0 C C E]
+
+			//Selecting channel
+			setColour(LED01, MAXCHANNELVALUE, 0, 0); //Red
+			setColour(LED02, MAXCHANNELVALUE, 0, 0); //Red
+			setColour(LED03, 0, MAXCHANNELVALUE, 0); //Green
+			setColour(LED04, 0, MAXCHANNELVALUE, 0); //Green
+			setColour(LED05, 0, 0, MAXCHANNELVALUE); //Blue
+			setColour(LED06, 0, 0, MAXCHANNELVALUE); //Blue
+
+			//Display the current colour
+			switch(adjustColourType){
+
+				case PRIMARYCOLOUR:
+
+					setColourType(LED08, primaryColour);
+					setColourType(LED09, primaryColour);
+
+					break;
+
+				case COMPLEMENTCOLOUR:
+
+					setColourType(LED08, complementColour);
+					setColourType(LED09, complementColour);
+
+					break;
+
+				case SELECTCOLOUR: 
+
+					setColourType(LED08, selectColour);
+					setColourType(LED09, selectColour);
+
+					break;
+
+			}
+			
+
+			if(
+				   cursorPosition == LED02
+				|| cursorPosition == LED04
+				|| cursorPosition == LED06
+				|| cursorPosition == LED10
+			){
+				setColourType(cursorPosition, selectColour);
+			}
+
+			break;
+
+		case VIEWCOLOURCHANNELSETTING:
+			//[CHB CHB CHB CHB CHB 0 0 C C C]
+
+			//Display the current colour
+			switch(adjustColourType){
+
+				case PRIMARYCOLOUR:
+
+					//Display the brightness value of the primary colour CCH
+					for(int i=0; i<primaryColour[adjustColourCh]; i++){
+
+						switch(adjustColourCh){
+
+							case RCH:
+								setColour(LED01-i, MAXCHANNELVALUE, 0, 0);
+								break;
+
+							case GCH:
+								setColour(LED01-i, 0, MAXCHANNELVALUE, 0);
+								break;
+
+							case BCH:
+								setColour(LED01-i, 0, 0, MAXCHANNELVALUE);
+								break;
+
+						}						
+
+					}
+
+					//Display resulting colour
+					setColourType(LED08, primaryColour);
+					setColourType(LED09, primaryColour);
+					setColourType(LED10, primaryColour);
+
+					break;
+
+				case COMPLEMENTCOLOUR: 
+
+					//Display the brightness value of the complement colour CCH
+					for(int i=0; i<complementColour[adjustColourCh]; i++){
+
+						switch(adjustColourCh){
+
+							case RCH:
+								setColour(LED01-i, MAXCHANNELVALUE, 0, 0);
+								break;
+
+							case GCH:
+								setColour(LED01-i, 0, MAXCHANNELVALUE, 0);
+								break;
+
+							case BCH:
+								setColour(LED01-i, 0, 0, MAXCHANNELVALUE);
+								break;
+
+						}						
+
+					}
+
+					//Display resulting colour
+					setColourType(LED08, complementColour);
+					setColourType(LED09, complementColour);
+					setColourType(LED10, complementColour);
+
+					break;
+
+				case SELECTCOLOUR: 
+
+					//Display the brightness value of the select colour CCH
+					for(int i=0; i<selectColour[adjustColourCh]; i++){
+
+						switch(adjustColourCh){
+
+							case RCH:
+								setColour(LED01-i, MAXCHANNELVALUE, 0, 0);
+								break;
+
+							case GCH:
+								setColour(LED01-i, 0, MAXCHANNELVALUE, 0);
+								break;
+
+							case BCH:
+								setColour(LED01-i, 0, 0, MAXCHANNELVALUE);
+								break;
+
+						}						
+
+					}
+
+					//Display resulting colour
+					setColourType(LED08, selectColour);
+					setColourType(LED09, selectColour);
+					setColourType(LED10, selectColour);
+
+					break;
+
+			}//Display of current colour
 
 			break;
 	}

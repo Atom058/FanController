@@ -21,6 +21,7 @@
 	void setColour(uint8_t led, uint8_t redCh, uint8_t greenCh, uint8_t blueCh);
 	void setAllColours(uint8_t redCh, uint8_t greenCh, uint8_t blueCh);
 	void setColourType(uint8_t led, uint8_t colour[3]);
+	void setAllColoursToType(uint8_t colour[3]);
 	void shiftout(uint32_t input);
 
 	//Interface Function
@@ -60,11 +61,11 @@
 
 
 	//Storage of fan status
-	#define FAN1CONN 0
-	#define FAN2CONN 1
-	#define FAN3CONN 2
-	#define FAN4CONN 3
-	#define FAN5CONN 4
+	#define FAN1 0
+	#define FAN2 1
+	#define FAN3 2
+	#define FAN4 3
+	#define FAN5 4
 
 	//Fans' analog channels
 	#define FAN1CH 1
@@ -100,7 +101,7 @@
 	//Number of unused bits at the end of the shit registry chain
 	#define SHIFTREGISTEREMPTYBITS 2
 
-	//Synonyms for LED's
+	//Synonyms for LED's - these are in the opposite direction to index!
 	#define LED01 9
 	#define LED02 8
 	#define LED03 7
@@ -112,10 +113,20 @@
 	#define LED09 1
 	#define LED10 0
 
+	#define PRIMARYCOLOUR 0
+	#define COMPLEMENTCOLOUR 1
+	#define SELECTCOLOUR 2
+
+	#define RCH 0
+	#define GCH 1
+	#define BCH 2
+
 	//Interface view status
 	#define VIEWSTART 0
 	#define VIEWSETTINGS 1
 	#define VIEWSETFAN 2
-	#define VIEWCOLOURS 3
+	#define VIEWCOLOUROVERVIEW 3
+	#define VIEWCOLOURSETTING 4
+	#define VIEWCOLOURCHANNELSETTING 5
 
 #endif
