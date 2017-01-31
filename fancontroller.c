@@ -1,8 +1,14 @@
 #include <fancontroller.h>
 
 
-//Timer unit, updated by WD timer approximately every 16ms
+//Input parsing
+	//Timer unit, updated by WD timer approximately every 16ms
 	uint16_t looptime = 0;
+	uint16_t leftButtonTime = 0;
+	uint16_t rightButtonTime = 0;
+	uint16_t downButtonTime = 0;
+
+	uint8_t buttonArray[3] = {0, 0, 0};
 
 //Fan status
 	uint16_t fan1Current = 0;
@@ -78,72 +84,13 @@ int main (void) {
 	startup(); //Initiate fan controller
 	sei();
 
-	//Testcolours
-
-	//uint32_t shiftBit = 0x80000000; //Test light :)
-	//shiftout(shiftBit);
-
 	while(1){
 
-		/*
-		for(uint8_t dimmer=0; dimmer<8; dimmer++){
-
-			for(uint8_t colour=0; colour<8; colour++){
-
-				setColour(1, colour, 0, 0, dimmer); //red
-				setColour(3, 0, colour, 0, dimmer); //red
-				setColour(5, 0, 0, colour, dimmer); //red
-
-				setColour(2, colour, dimmer, 0, 0); //yellow
-				setColour(4, 0, colour, dimmer, 0); //cyan
-
-				setColour(6, colour, colour, dimmer, 0);
-				setColour(7, dimmer, colour, dimmer, 0);
-				setColour(8, dimmer, 0, colour, 0);
-
-				PORTC ^= _BV(PORTC5); //toggle indicator
-				_delay_ms(500);
-
-			}
-
+		if(DEBUGDISPLAY){
+			debuginputController();
+		} else{
+			parseInput();
 		}
-		*/
-
-
-		/*
-		//testing rotary encoder input, moving through LEDs
-		if( (PINB>>PINB4 & 1) != 1 ){
-			if( shiftBit>>31 & 1){
-				shiftBit = 0x00000004; //Move to other end
-			} else{
-				shiftBit <<= 1; //Move one to the right
-			}
-			_delay_ms(DEBOUNCETURN);
-		}
-		if( (PINB>>PINB5 & 1) != 1 ){
-			if( shiftBit>>2 & 1){
-				shiftBit = 0x80000000; //Move to other end
-			} else{
-				shiftBit >>= 1; //Move one to the right
-			}
-			_delay_ms(DEBOUNCETURN);
-		}
-		if( (PINB>>PINB0 & 1) != 1 ){
-			if( shiftBit>>31 & 1){
-				shiftBit = 0x00000004; //Move to end
-			} else{
-				shiftBit = 0x80000000; //Move to begining
-			}
-			_delay_ms(DEBOUNCEBUTTON);
-		}
-
-		shiftout(shiftBit);
-		*/
-
-
-	//Rotary encoder input
-	//TODO
-
 	} //while
 
 }
@@ -254,6 +201,128 @@ void startup(void) {
 	updateInterface();
 
 }
+
+/* ------------------------
+
+[Controller functions]
+
+--------------------------- */
+void parseInput(void){
+
+	//if we have any inputs, pipe to relevant controller
+	if(	   buttonArray[DOWN]
+		|| buttonArray[LEFT]
+		|| buttonArray[RIGHT]
+		){
+		
+		if(DEBUGINPUT){
+			debuginputController();
+		} else {
+			
+			switch(currentView){
+		
+				case VIEWSTART:
+					startController();
+					break;
+				case VIEWSETTINGS:
+					settingsController();
+					break;
+				case VIEWSETFAN:
+					setfanController();
+					break;
+				case VIEWCOLOUROVERVIEW:
+					colouroverviewController();
+					break;
+				case VIEWCOLOURSETTING:
+					coloursettingController();
+					break;
+				case VIEWCOLOURCHANNELSETTING:
+					colourchannelsettingController();
+					break;
+		
+			} //switch
+
+		}
+
+	}//if
+
+}
+
+// ----- start of controllers ----- //
+void startController(void){
+
+	if(downButtonTime > 0){
+
+		//TODO
+		cursorPosition;
+		currentView = VIEWSETTINGS;
+
+	}
+
+	updateInterface();
+
+}
+
+void settingsController(void){
+
+	if(buttonArray[DOWN]){
+
+	} else if(buttonArray[LEFT]){
+
+	} else if(buttonArray[RIGHT]){
+
+	}
+
+}
+
+void setfanController(void){
+
+	if(buttonArray[DOWN]){
+
+	} else if(buttonArray[LEFT]){
+
+	} else if(buttonArray[RIGHT]){
+		
+	}
+
+}
+
+void colouroverviewController(void){
+
+	if(buttonArray[DOWN]){
+
+	} else if(buttonArray[LEFT]){
+
+	} else if(buttonArray[RIGHT]){
+		
+	}
+
+}
+
+void coloursettingController(void){
+
+	if(buttonArray[DOWN]){
+
+	} else if(buttonArray[LEFT]){
+
+	} else if(buttonArray[RIGHT]){
+		
+	}
+
+}
+
+void colourchannelsettingController(void){
+
+	if(buttonArray[DOWN]){
+
+	} else if(buttonArray[LEFT]){
+
+	} else if(buttonArray[RIGHT]){
+		
+	}
+
+}
+
 
 
 /* ------------------------
@@ -1004,11 +1073,69 @@ void updateInterface(void){
 --------------------------- */
 
 
-//Rotary encoder interrupts
-ISR(PCINT1_vect){
+/*
+	Rotary encoder inputs
+
+	Process for parsing input:
+		*) Interrupt is registered, launching the routine
+		*) Check which button fired the interrupt (polling the three pins). 
+				NOTE: fired both for high and low!
+		*) Save the timestamp for when the button was pressed. This is also the indicator
+				for if the button was pressed during the previous interrupt.
+		*) Debouncing: compare the timestamp of the first occurance w. the current time.
+				This is done both in the main loop, as well as in the debounce.
+*/
+
+/*
+	Function to parse an input pin
+*/
+void checkButton(uint8_t buttonStatus, uint8_t buttonTimer){
+
+	if(buttonStatus){
+
+		if(buttonTimer == 0){
+			buttonTimer = looptime;
+		}
+
+	} else {
+
+		//When should we consider the button as released, given debounce:
+		if( 
+			   (downButtonTime != 0)
+			&& (
+					   (	//This is the special case where we wrap the integer
+					   		   buttonTimer > buttonTimer+DEBOUNCEBUTTON
+					   		&& looptime < buttonTimer
+					   		&& looptime >= (buttonTimer+DEBOUNCEBUTTON)
+					   	)
+					|| (looptime >= buttonTimer+DEBOUNCEBUTTON)
+				)
+		){
+			buttonTimer = 0;
+		} //if
+
+	}
 
 }
+
+/*
+	Interrupt vectors, built into ATMEL
+*/
 ISR(PCINT2_vect, ISR_ALIASOF(PCINT1_vect));
+ISR(PCINT1_vect){
+
+	buttonArray[DOWN] = PINB>>PINB0 & 1;
+	buttonArray[LEFT] = PINB>>PINB4 & 1;
+	buttonArray[RIGHT] = PINB>>PINB5 & 1;
+
+	//Down button
+	checkButton(buttonArray[DOWN], downButtonTime);
+	//Left button
+	checkButton(buttonArray[LEFT], leftButtonTime);
+	//Right button
+	checkButton(buttonArray[RIGHT], rightButtonTime);
+
+}
 
 //WD timer update
 ISR(WDT_vect){
@@ -1029,3 +1156,58 @@ ISR(TIMER2_OVF_vect){
 }
 
 ISR(TIMER2_COMPB_vect, ISR_ALIASOF(TIMER2_OVF_vect));
+
+/* ------------------------
+
+[Debug functions] 
+
+--------------------------- */
+/*
+	Moves the cursor according to inputs
+*/
+void debuginputController(void){
+
+	if(buttonArray[DOWN]){
+		setAllColoursToType(primaryColour);
+	} else if(buttonArray[LEFT]){
+
+		setAllColoursToType(noColour);
+
+		if(cursorPosition >= LED01){
+			cursorPosition = LED01;
+		} else {
+			cursorPosition++;
+		}
+
+		setColourType(cursorPosition, primaryColour);
+
+	} else if(buttonArray[RIGHT]){
+
+		setAllColoursToType(noColour);
+
+		if(cursorPosition != LED10){
+			cursorPosition--;
+		}
+
+		setColourType(cursorPosition, primaryColour);
+
+	}
+
+}
+
+/*
+	Flashed display with the RGB colours
+*/
+void debugdisplayController(void){
+
+	//Simple, yet effective!
+	setAllColours(MAXCHANNELVALUE, 0, 0);
+	_delay_ms(330);
+
+	setAllColours(0, MAXCHANNELVALUE, 0);
+	_delay_ms(330);
+
+	setAllColours(0, 0, MAXCHANNELVALUE);
+	_delay_ms(330);
+
+}

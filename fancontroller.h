@@ -26,8 +26,22 @@
 
 	//Interface Function
 	void updateInterface(void);
-	uint8_t parseInput(uint8_t input);
-	
+	void parseInput(void);
+
+	//View controllers (as functions #Yolo)
+	void startController(void);
+	void settingsController(void);
+	void setfanController(void);
+	void colouroverviewController(void);
+	void coloursettingController(void);
+	void colourchannelsettingController(void);
+
+	//Debug controllers
+	void debuginputController(void);
+	void debugdisplayController(void);
+
+	//Input functions
+	void checkButton(uint8_t buttonStatus, uint8_t buttonTimer);
 
 	//PORT LOCATIONS
 		//Shift registry
@@ -48,6 +62,10 @@
 			// Location of: FAN3PWM OCR1A / P15 / PB1
 			// Location of: FAN4PWM OCR1B / P16 / PB2
 			// Location of: FAN5PWM OCR2A / P17 / PB3
+
+	//Debugging switches - only one at the time!
+	#define DEBUGINPUT 0
+	#define DEBUGDISPLAY 0
 
 	//Startup timings
 	#define STARTUPFANWARMINGPERIOD 4000
@@ -128,5 +146,10 @@
 	#define VIEWCOLOUROVERVIEW 3
 	#define VIEWCOLOURSETTING 4
 	#define VIEWCOLOURCHANNELSETTING 5
+
+	//Input references
+	#define DOWN 0
+	#define LEFT 1
+	#define RIGHT 2
 
 #endif
