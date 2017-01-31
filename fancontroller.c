@@ -9,6 +9,7 @@
 	uint16_t downButtonTime = 0;
 
 	uint8_t buttonArray[3] = {0, 0, 0};
+	uint8_t inputUsed[3] = {0, 0, 0};
 
 //Fan status
 	uint16_t fan1Current = 0;
@@ -1089,9 +1090,9 @@ void updateInterface(void){
 /*
 	Function to parse an input pin
 */
-void checkButton(uint8_t buttonStatus, uint8_t buttonTimer){
+void checkButton(uint8_t button, uint8_t buttonTimer){
 
-	if(buttonStatus){
+	if(buttonArray[button]){
 
 		if(buttonTimer == 0){
 			buttonTimer = looptime;
@@ -1112,6 +1113,7 @@ void checkButton(uint8_t buttonStatus, uint8_t buttonTimer){
 				)
 		){
 			buttonTimer = 0;
+			inputUsed[button] = 0;
 		} //if
 
 	}
@@ -1129,11 +1131,11 @@ ISR(PCINT1_vect){
 	buttonArray[RIGHT] = PINB>>PINB5 & 1;
 
 	//Down button
-	checkButton(buttonArray[DOWN], downButtonTime);
+	checkButton(DOWN, downButtonTime);
 	//Left button
-	checkButton(buttonArray[LEFT], leftButtonTime);
+	checkButton(LEFT, leftButtonTime);
 	//Right button
-	checkButton(buttonArray[RIGHT], rightButtonTime);
+	checkButton(RIGHT, rightButtonTime);
 
 }
 
