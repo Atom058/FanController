@@ -362,6 +362,8 @@ void setfanController(void){
 		cursorPosition = CURSORUNDETERMINED;
 		currentView = VIEWSETTINGS;
 
+		//SAVE TO EEPROM!
+
 		inputUsed |= 1<<DOWN;
 
 	} else if(buttonStatus>>LEFT & 1){
@@ -386,17 +388,82 @@ void setfanController(void){
 
 	}
 
+	updateInterface();
+
 }
 
 void colouroverviewController(void){
 
+	if(cursorPosition == CURSORUNDETERMINED)
+		cursorPosition = LED02;
+
 	if(buttonStatus>>DOWN & 1){
+
+		switch(cursorPosition) {
+
+			case LED02:
+			//Primary colour
+				currentView = VIEWCOLOURSETTING;
+				adjustColourType = PRIMARYCOLOUR;
+				break;
+
+			case LED05:
+			//Complement colour
+				currentView = VIEWCOLOURSETTING;
+				adjustColourType = COMPLEMENTCOLOUR;
+				break;
+
+			case LED08:
+			//Select colour
+				currentView = VIEWCOLOURSETTING;
+				adjustColourType = SELECTCOLOUR;
+				break;
+
+			case LED10:
+			//Enter-exit to home
+				currentView = VIEWSTART;
+				break;
+
+		}
+
+		cursorPosition = CURSORUNDETERMINED;
+		inputUsed |= 1<<DOWN;
 
 	} else if(buttonStatus>>LEFT & 1){
 
+		if(cursorPosition<LED02){
+
+			if(cursorPosition == LED10){
+				cursorPosition += 2;
+			} else {
+				cursorPosition += 3;
+			}
+
+		} else {
+			cursorPosition = LED02;
+		}
+
+		inputUsed |= 1<<LEFT;
+
 	} else if(buttonStatus>>RIGHT & 1){
 		
+		if(cursorPosition>LED10){
+
+			if(cursorPosition == LED08){
+				cursorPosition -= 2;
+			} else {
+				cursorPosition -= 3;
+			}
+
+		} else {
+			cursorPosition = LED10;
+		}
+
+		inputUsed |= 1<<RIGHT;
+
 	}
+
+	updateInterface();
 
 }
 
@@ -1014,7 +1081,7 @@ void updateInterface(void){
 			break;
 
 		case VIEWCOLOURSETTING:
-			//[R R G G B B 0 C C E]
+			//[R R G G B B 0 CR CR E]
 
 			//Selecting channel
 			setColour(LED01, MAXCHANNELVALUE, 0, 0); //Red
@@ -1063,7 +1130,7 @@ void updateInterface(void){
 			break;
 
 		case VIEWCOLOURCHANNELSETTING:
-			//[CHB CHB CHB CHB CHB 0 0 C C C]
+			//[CHB CHB CHB CHB CHB 0 0 CR CR CR]
 
 			//Display the current colour
 			switch(adjustColourType){
