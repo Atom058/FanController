@@ -431,32 +431,48 @@ void colouroverviewController(void){
 
 	} else if(buttonStatus>>LEFT & 1){
 
-		if(cursorPosition<LED02){
+		switch (cursorPosition){
+			
+			case LED02:
+				cursorPosition = LED02;
+				break;
 
-			if(cursorPosition == LED10){
-				cursorPosition += 2;
-			} else {
-				cursorPosition += 3;
-			}
+			case LED05:
+				cursorPosition = LED02;
+				break;
 
-		} else {
-			cursorPosition = LED02;
+			case LED08:
+				cursorPosition = LED05;
+				break;
+
+			case LED10:
+				cursorPosition = LED08;
+				break;
+
 		}
 
 		inputUsed |= 1<<LEFT;
 
 	} else if(buttonStatus>>RIGHT & 1){
 		
-		if(cursorPosition>LED10){
+		switch (cursorPosition){
+			
+			case LED02:
+				cursorPosition = LED05;
+				break;
 
-			if(cursorPosition == LED08){
-				cursorPosition -= 2;
-			} else {
-				cursorPosition -= 3;
-			}
+			case LED05:
+				cursorPosition = LED08;
+				break;
 
-		} else {
-			cursorPosition = LED10;
+			case LED08:
+				cursorPosition = LED10;
+				break;
+
+			case LED10:
+				cursorPosition = LED10;
+				break;
+
 		}
 
 		inputUsed |= 1<<RIGHT;
@@ -469,13 +485,88 @@ void colouroverviewController(void){
 
 void coloursettingController(void){
 
+	if(cursorPosition == CURSORUNDETERMINED)
+		cursorPosition = LED02; //RED
+
 	if(buttonStatus>>DOWN & 1){
+
+		switch(cursorPosition) {
+
+			case LED02:
+				adjustColourCh = RCH;
+				currentView = VIEWCOLOURCHANNELSETTING;
+				break;
+
+			case LED04:
+				adjustColourCh = GCH;
+				currentView = VIEWCOLOURCHANNELSETTING;
+				break;
+
+			case LED06:
+				adjustColourCh = BCH;
+				currentView = VIEWCOLOURCHANNELSETTING;
+				break;
+
+			case LED10:
+				currentView = VIEWCOLOUROVERVIEW;
+				break;
+
+		}
+
+		cursorPosition = CURSORUNDETERMINED;
+		inputUsed |= 1<<DOWN;
 
 	} else if(buttonStatus>>LEFT & 1){
 
+		switch (cursorPosition){
+			
+			case LED02:
+				cursorPosition = LED02;
+				break;
+
+			case LED04:
+				cursorPosition = LED02;
+				break;
+
+			case LED06:
+				cursorPosition = LED04;
+				break;
+
+			case LED10:
+				cursorPosition = LED06;
+				break;
+
+		}
+
+		inputUsed |= 1<<LEFT;
+
 	} else if(buttonStatus>>RIGHT & 1){
 		
+		switch (cursorPosition){
+			
+			case LED02:
+				cursorPosition = LED04;
+				break;
+
+			case LED04:
+				cursorPosition = LED06;
+				break;
+
+			case LED06:
+				cursorPosition = LED10;
+				break;
+
+			case LED10:
+				cursorPosition = LED10;
+				break;
+
+		}
+
+		inputUsed |= 1<<RIGHT;
+
 	}
+
+	updateInterface();
 
 }
 
