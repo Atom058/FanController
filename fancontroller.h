@@ -152,4 +152,7 @@
 	#define LEFT 1
 	#define RIGHT 2
 
+	//Cursor location unknown value
+	#define CURSORUNDETERMINED 100
+
 #endif

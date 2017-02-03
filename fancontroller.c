@@ -253,6 +253,21 @@ void startController(void){
 
 		//Pressing button should get us to next screen
 		//Update cursor position, as this will dictate start location!
+		cursorPosition = CURSORUNDETERMINED;
+		
+		currentView = VIEWSETTINGS;
+		inputUsed |= 1<<DOWN;
+
+	}
+
+	updateInterface();
+
+}
+
+void settingsController(void){
+
+	if(cursorPosition == CURSORUNDETERMINED){
+		
 		switch (currentProfile){
 
 			case LPROFILE:
@@ -268,25 +283,73 @@ void startController(void){
 				break;
 
 		}
-		
-		currentView = VIEWSETTINGS;
+
+	}
+
+	if(buttonStatus>>DOWN & 1){
+
+		switch (cursorPosition){
+
+			//Fans
+			case LED01:
+				adjustFAN = FAN1;
+				break;
+
+			case LED02:
+				adjustFAN = FAN2;
+				break;
+
+			case LED03:
+				adjustFAN = FAN3;
+				break;
+
+			case LED04:
+				adjustFAN = FAN4;
+				break;
+
+			case LED05:
+				adjustFAN = FAN5;
+				break;
+
+		}
+
 		inputUsed |= 1<<DOWN;
+		cursorPosition = CURSORUNDETERMINED;
+		currentView = VIEWSETFAN;
+
+	} else if(buttonStatus>>LEFT & 1){
+
+		if(cursorPosition < LED01){
+
+			cursorPosition++;
+
+			if(cursorPosition == LED06)
+				cursorPosition++;
+
+		} else {
+			cursorPosition = LED01;
+		}
+
+		inputUsed |= 1<<LEFT;
+
+	} else if(buttonStatus>>RIGHT & 1){
+
+		if(cursorPosition > LED10){
+
+			cursorPosition--;
+
+			if(cursorPosition == LED06)
+				cursorPosition--;
+
+		} else {
+			cursorPosition = LED10;
+		}
+
+		inputUsed |= 1<<RIGHT;
 
 	}
 
 	updateInterface();
-
-}
-
-void settingsController(void){
-
-	if(buttonStatus>>DOWN & 1){
-
-	} else if(buttonStatus>>LEFT & 1){
-
-	} else if(buttonStatus>>RIGHT & 1){
-
-	}
 
 }
 
