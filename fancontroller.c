@@ -8,8 +8,8 @@
 	uint16_t rightButtonTime = 0;
 	uint16_t downButtonTime = 0;
 
-	uint8_t buttonArray[3] = {0, 0, 0};
-	uint8_t inputUsed[3] = {0, 0, 0};
+	uint8_t buttonStatus = 0; //Button press status
+	uint8_t inputUsed = 0; //Input used status (to avoid rogue triggering)
 
 //Fan status
 	uint16_t fan1Current = 0;
@@ -211,10 +211,7 @@ void startup(void) {
 void parseInput(void){
 
 	//if we have any inputs, pipe to relevant controller
-	if(	   buttonArray[DOWN]
-		|| buttonArray[LEFT]
-		|| buttonArray[RIGHT]
-		){
+	if(buttonStatus){
 		
 		if(DEBUGINPUT){
 			debuginputController();
@@ -254,9 +251,26 @@ void startController(void){
 
 	if(downButtonTime > 0){
 
-		//TODO
-		cursorPosition;
+		//Pressing button should get us to next screen
+		//Update cursor position, as this will dictate start location!
+		switch (currentProfile){
+
+			case LPROFILE:
+				cursorPosition = LED07;
+				break;
+
+			case MPROFILE:
+				cursorPosition = LED08;
+				break;
+
+			case HPROFILE:
+				cursorPosition = LED09;
+				break;
+
+		}
+		
 		currentView = VIEWSETTINGS;
+		inputUsed |= 1<<DOWN;
 
 	}
 
@@ -266,11 +280,11 @@ void startController(void){
 
 void settingsController(void){
 
-	if(buttonArray[DOWN]){
+	if(buttonStatus>>DOWN & 1){
 
-	} else if(buttonArray[LEFT]){
+	} else if(buttonStatus>>LEFT & 1){
 
-	} else if(buttonArray[RIGHT]){
+	} else if(buttonStatus>>RIGHT & 1){
 
 	}
 
@@ -278,11 +292,11 @@ void settingsController(void){
 
 void setfanController(void){
 
-	if(buttonArray[DOWN]){
+	if(buttonStatus>>DOWN & 1){
 
-	} else if(buttonArray[LEFT]){
+	} else if(buttonStatus>>LEFT & 1){
 
-	} else if(buttonArray[RIGHT]){
+	} else if(buttonStatus>>RIGHT & 1){
 		
 	}
 
@@ -290,11 +304,11 @@ void setfanController(void){
 
 void colouroverviewController(void){
 
-	if(buttonArray[DOWN]){
+	if(buttonStatus>>DOWN & 1){
 
-	} else if(buttonArray[LEFT]){
+	} else if(buttonStatus>>LEFT & 1){
 
-	} else if(buttonArray[RIGHT]){
+	} else if(buttonStatus>>RIGHT & 1){
 		
 	}
 
@@ -302,11 +316,11 @@ void colouroverviewController(void){
 
 void coloursettingController(void){
 
-	if(buttonArray[DOWN]){
+	if(buttonStatus>>DOWN & 1){
 
-	} else if(buttonArray[LEFT]){
+	} else if(buttonStatus>>LEFT & 1){
 
-	} else if(buttonArray[RIGHT]){
+	} else if(buttonStatus>>RIGHT & 1){
 		
 	}
 
@@ -314,11 +328,11 @@ void coloursettingController(void){
 
 void colourchannelsettingController(void){
 
-	if(buttonArray[DOWN]){
+	if(buttonStatus>>DOWN & 1){
 
-	} else if(buttonArray[LEFT]){
+	} else if(buttonStatus>>LEFT & 1){
 
-	} else if(buttonArray[RIGHT]){
+	} else if(buttonStatus>>RIGHT & 1){
 		
 	}
 
@@ -830,7 +844,7 @@ void updateInterface(void){
 			break;
 
 		case VIEWSETTINGS:
-			//[F1 F2 F3 F4 F5 0 P1 P2 P3]		
+			//[F1 F2 F3 F4 F5 0 P1 P2 P3 E]		
 
 			//Fan part
 			if(connectedFans>>FAN1 & 1)
@@ -1089,10 +1103,14 @@ void updateInterface(void){
 
 /*
 	Function to parse an input pin
+
+	Takes the declared constant for the button, as well as the
+		corresponding timer as inputs. Might be simplified by
+		making the timer part implied!
 */
 void checkButton(uint8_t button, uint8_t buttonTimer){
 
-	if(buttonArray[button]){
+	if(buttonStatus>>button & 1){
 
 		if(buttonTimer == 0){
 			buttonTimer = looptime;
@@ -1113,7 +1131,7 @@ void checkButton(uint8_t button, uint8_t buttonTimer){
 				)
 		){
 			buttonTimer = 0;
-			inputUsed[button] = 0;
+			inputUsed &= ~(1<<button);
 		} //if
 
 	}
@@ -1126,9 +1144,10 @@ void checkButton(uint8_t button, uint8_t buttonTimer){
 ISR(PCINT2_vect, ISR_ALIASOF(PCINT1_vect));
 ISR(PCINT1_vect){
 
-	buttonArray[DOWN] = PINB>>PINB0 & 1;
-	buttonArray[LEFT] = PINB>>PINB4 & 1;
-	buttonArray[RIGHT] = PINB>>PINB5 & 1;
+	//Bit banging magic
+	buttonStatus &= ~((PINB>>PINB0 ^ 1)<<DOWN);
+	buttonStatus &= ~((PINB>>PINB4 ^ 1)<<LEFT);
+	buttonStatus &= ~((PINB>>PINB5 ^ 1)<<RIGHT);
 
 	//Down button
 	checkButton(DOWN, downButtonTime);
@@ -1169,9 +1188,9 @@ ISR(TIMER2_COMPB_vect, ISR_ALIASOF(TIMER2_OVF_vect));
 */
 void debuginputController(void){
 
-	if(buttonArray[DOWN]){
+	if(buttonStatus>>DOWN & 1){
 		setAllColoursToType(primaryColour);
-	} else if(buttonArray[LEFT]){
+	} else if(buttonStatus>>LEFT & 1){
 
 		setAllColoursToType(noColour);
 
@@ -1183,7 +1202,7 @@ void debuginputController(void){
 
 		setColourType(cursorPosition, primaryColour);
 
-	} else if(buttonArray[RIGHT]){
+	} else if(buttonStatus>>RIGHT & 1){
 
 		setAllColoursToType(noColour);
 
