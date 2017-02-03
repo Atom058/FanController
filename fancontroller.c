@@ -355,12 +355,35 @@ void settingsController(void){
 
 void setfanController(void){
 
+	// Cursor not needed?: if(cursorPosition == CURSORUNDETERMINED)
+
 	if(buttonStatus>>DOWN & 1){
+
+		cursorPosition = CURSORUNDETERMINED;
+		currentView = VIEWSETTINGS;
+
+		inputUsed |= 1<<DOWN;
 
 	} else if(buttonStatus>>LEFT & 1){
 
+		if(fanProfileSpeeds[adjustFAN][currentProfile] > 0){
+			fanProfileSpeeds[adjustFAN][cursorPosition]--;
+		} else {
+			fanProfileSpeeds[adjustFAN][cursorPosition] = 0;
+		}
+
+		inputUsed |= 1<<LEFT;
+
 	} else if(buttonStatus>>RIGHT & 1){
 		
+		if(fanProfileSpeeds[adjustFAN][currentProfile] < 10){
+			fanProfileSpeeds[adjustFAN][currentProfile]++;
+		} else {
+			fanProfileSpeeds[adjustFAN][currentProfile] = 10;
+		}
+
+		inputUsed |= 1<<RIGHT;
+
 	}
 
 }
