@@ -574,7 +574,20 @@ void colourchannelsettingController(void){
 
 	if(buttonStatus>>DOWN & 1){
 
+		cursorPosition = CURSORUNDETERMINED;
+		//Save to EEPROM
+
+		currentView = VIEWCOLOURSETTING;
+
 	} else if(buttonStatus>>LEFT & 1){
+
+		switch(adjustColourType){
+
+			case PRIMARYCOLOUR:
+			case COMPLEMENTCOLOUR:
+			case PRIMARYCOLOUR:
+
+		}
 
 	} else if(buttonStatus>>RIGHT & 1){
 		
