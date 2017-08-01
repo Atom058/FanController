@@ -8,8 +8,10 @@
 	uint16_t rightButtonTime = 0;
 	uint16_t downButtonTime = 0;
 
+	//These two variables uses the same bit locations (DOWN/LEFT/RIGHT)
 	uint8_t buttonStatus = 0; //Button press status
 	uint8_t inputUsed = 0; //Input used status (to avoid rogue triggering)
+	uint8_t buttonStatusLogical = 0;
 
 //Fan status
 	uint16_t fan1Current = 0;
@@ -69,7 +71,7 @@
 	uint8_t cursorPosition = LED01;
 
 	uint8_t adjustFAN = FAN1; //For the view setting fan-speed
-	uint8_t adjustColourType = LED01; //For the view setting LED colour
+	uint8_t adjustColourType = PRIMARYCOLOUR; //For the view setting LED colour
 	uint8_t adjustColourCh = RCH; //For the view setting LED colour
 
 	//Default colour settings
@@ -199,6 +201,7 @@ void startup(void) {
 
 	PORTC &= ~(_BV(PORTC5)); //Ensure that the LED is off
 
+	//Initiate interface for start view
 	updateInterface();
 
 }
@@ -210,8 +213,16 @@ void startup(void) {
 --------------------------- */
 void parseInput(void){
 
-	//if we have any inputs, pipe to relevant controller
-	if(buttonStatus){
+	/*
+		if we have any inputs, pipe to relevant controller
+		Button presses might carry over between controller transitions,
+		so we should remove already used inputs from the pool.
+
+		TODO: long presses?
+	*/
+	buttonStatusLogical = buttonStatus ^ inputUsed;
+
+	if(buttonStatusLogical){
 		
 		if(DEBUGINPUT){
 			debuginputController();
@@ -240,16 +251,30 @@ void parseInput(void){
 		
 			} //switch
 
+			/*
+			Controllers will initiate the transition to any next screens by
+			setting the currentView variable. As controllers are only responsible
+			for updating the view if there is an input, we display the default
+			views initially.
+			*/
+			updateInterface();
+
 		}
 
 	}//if
+
+	//Special case for accessing the calibration of colours
+	else if ((buttonStatus>>DOWN & 1) && looptime - downButtonTime > LONGPRESSFORCOLOURDELAY){
+		currentView = VIEWCOLOUROVERVIEW;
+		updateInterface();
+	}
 
 }
 
 // ----- start of controllers ----- //
 void startController(void){
 
-	if(downButtonTime > 0){
+	if(buttonStatusLogical>>DOWN & 1){
 
 		//Pressing button should get us to next screen
 		//Update cursor position, as this will dictate start location!
@@ -259,8 +284,6 @@ void startController(void){
 		inputUsed |= 1<<DOWN;
 
 	}
-
-	updateInterface();
 
 }
 
@@ -286,38 +309,62 @@ void settingsController(void){
 
 	}
 
-	if(buttonStatus>>DOWN & 1){
+	if(buttonStatusLogical>>DOWN & 1){
 
 		switch (cursorPosition){
 
 			//Fans
 			case LED01:
 				adjustFAN = FAN1;
+				currentView = VIEWSETFAN;
 				break;
 
 			case LED02:
 				adjustFAN = FAN2;
+				currentView = VIEWSETFAN;
 				break;
 
 			case LED03:
 				adjustFAN = FAN3;
+				currentView = VIEWSETFAN;
 				break;
 
 			case LED04:
 				adjustFAN = FAN4;
+				currentView = VIEWSETFAN;
 				break;
 
 			case LED05:
 				adjustFAN = FAN5;
+				currentView = VIEWSETFAN;
+				break;
+
+			case LED07:
+				currentProfile = LPROFILE;
+				currentView = VIEWSTART;
+				break;
+
+			case LED08:
+				currentProfile = MPROFILE;
+				currentView = VIEWSTART;
+				break;
+
+			case LED09:
+				currentProfile = HPROFILE;
+				currentView = VIEWSTART;
+				break;
+
+			case LED10:
+				currentView = VIEWSTART;
 				break;
 
 		}
 
 		inputUsed |= 1<<DOWN;
 		cursorPosition = CURSORUNDETERMINED;
-		currentView = VIEWSETFAN;
+		
 
-	} else if(buttonStatus>>LEFT & 1){
+	} else if(buttonStatusLogical>>LEFT & 1){
 
 		if(cursorPosition < LED01){
 
@@ -332,7 +379,7 @@ void settingsController(void){
 
 		inputUsed |= 1<<LEFT;
 
-	} else if(buttonStatus>>RIGHT & 1){
+	} else if(buttonStatusLogical>>RIGHT & 1){
 
 		if(cursorPosition > LED10){
 
@@ -349,24 +396,22 @@ void settingsController(void){
 
 	}
 
-	updateInterface();
-
 }
 
 void setfanController(void){
 
 	// Cursor not needed?: if(cursorPosition == CURSORUNDETERMINED)
 
-	if(buttonStatus>>DOWN & 1){
+	if(buttonStatusLogical>>DOWN & 1){
 
 		cursorPosition = CURSORUNDETERMINED;
 		currentView = VIEWSETTINGS;
 
-		//SAVE TO EEPROM!
+		//TODO: SAVE TO EEPROM!
 
 		inputUsed |= 1<<DOWN;
 
-	} else if(buttonStatus>>LEFT & 1){
+	} else if(buttonStatusLogical>>LEFT & 1){
 
 		if(fanProfileSpeeds[adjustFAN][currentProfile] > 0){
 			fanProfileSpeeds[adjustFAN][cursorPosition]--;
@@ -376,7 +421,7 @@ void setfanController(void){
 
 		inputUsed |= 1<<LEFT;
 
-	} else if(buttonStatus>>RIGHT & 1){
+	} else if(buttonStatusLogical>>RIGHT & 1){
 		
 		if(fanProfileSpeeds[adjustFAN][currentProfile] < 10){
 			fanProfileSpeeds[adjustFAN][currentProfile]++;
@@ -388,8 +433,6 @@ void setfanController(void){
 
 	}
 
-	updateInterface();
-
 }
 
 void colouroverviewController(void){
@@ -397,7 +440,7 @@ void colouroverviewController(void){
 	if(cursorPosition == CURSORUNDETERMINED)
 		cursorPosition = LED02;
 
-	if(buttonStatus>>DOWN & 1){
+	if(buttonStatusLogical>>DOWN & 1){
 
 		switch(cursorPosition) {
 
@@ -429,7 +472,7 @@ void colouroverviewController(void){
 		cursorPosition = CURSORUNDETERMINED;
 		inputUsed |= 1<<DOWN;
 
-	} else if(buttonStatus>>LEFT & 1){
+	} else if(buttonStatusLogical>>LEFT & 1){
 
 		switch (cursorPosition){
 			
@@ -453,7 +496,7 @@ void colouroverviewController(void){
 
 		inputUsed |= 1<<LEFT;
 
-	} else if(buttonStatus>>RIGHT & 1){
+	} else if(buttonStatusLogical>>RIGHT & 1){
 		
 		switch (cursorPosition){
 			
@@ -479,8 +522,6 @@ void colouroverviewController(void){
 
 	}
 
-	updateInterface();
-
 }
 
 void coloursettingController(void){
@@ -488,7 +529,7 @@ void coloursettingController(void){
 	if(cursorPosition == CURSORUNDETERMINED)
 		cursorPosition = LED02; //RED
 
-	if(buttonStatus>>DOWN & 1){
+	if(buttonStatusLogical>>DOWN & 1){
 
 		switch(cursorPosition) {
 
@@ -516,7 +557,7 @@ void coloursettingController(void){
 		cursorPosition = CURSORUNDETERMINED;
 		inputUsed |= 1<<DOWN;
 
-	} else if(buttonStatus>>LEFT & 1){
+	} else if(buttonStatusLogical>>LEFT & 1){
 
 		switch (cursorPosition){
 			
@@ -540,7 +581,7 @@ void coloursettingController(void){
 
 		inputUsed |= 1<<LEFT;
 
-	} else if(buttonStatus>>RIGHT & 1){
+	} else if(buttonStatusLogical>>RIGHT & 1){
 		
 		switch (cursorPosition){
 			
@@ -566,30 +607,75 @@ void coloursettingController(void){
 
 	}
 
-	updateInterface();
-
 }
 
 void colourchannelsettingController(void){
 
-	if(buttonStatus>>DOWN & 1){
+	if(buttonStatusLogical>>DOWN & 1){
+
+		//Pressing down in any position works
 
 		cursorPosition = CURSORUNDETERMINED;
-		//Save to EEPROM
+		
+		//TODO: Save to EEPROM
 
 		currentView = VIEWCOLOURSETTING;
 
-	} else if(buttonStatus>>LEFT & 1){
+		inputUsed |= 1<<DOWN;
+
+	} else if(buttonStatusLogical>>LEFT & 1){
 
 		switch(adjustColourType){
 
 			case PRIMARYCOLOUR:
+				if(primaryColour[adjustColourCh] > 0){
+					primaryColour[adjustColourCh]--;
+				}
+				break;
+
 			case COMPLEMENTCOLOUR:
-			case PRIMARYCOLOUR:
+				if(complementColour[adjustColourCh] > 0){
+					complementColour[adjustColourCh]--;
+				}
+				break;
+
+			case SELECTCOLOUR:
+				if(selectColour[adjustColourCh] > 0){
+					selectColour[adjustColourCh]--;
+				}
+				break;
+
 
 		}
 
-	} else if(buttonStatus>>RIGHT & 1){
+		inputUsed |= 1<<LEFT;
+
+	} else if(buttonStatusLogical>>RIGHT & 1){
+
+		switch(adjustColourType){
+
+			case PRIMARYCOLOUR:
+				if(primaryColour[adjustColourCh] < MAXCHANNELVALUE){
+					primaryColour[adjustColourCh]++;
+				}
+				break;
+
+			case COMPLEMENTCOLOUR:
+				if(complementColour[adjustColourCh] < MAXCHANNELVALUE){
+					complementColour[adjustColourCh]++;
+				}
+				break;
+
+			case SELECTCOLOUR:
+				if(selectColour[adjustColourCh] < MAXCHANNELVALUE){
+					selectColour[adjustColourCh]++;
+				}
+				break;
+
+
+		}
+
+		inputUsed |= 1<<RIGHT;
 		
 	}
 
@@ -1086,6 +1172,7 @@ void updateInterface(void){
 	switch(currentView){
 
 		case VIEWSTART:
+			//[F1 0 F2 0 F3 0 F4 0 F5 0]
 
 			if(connectedFans>>FAN1 & 1)
 				setColourType(LED01, primaryColour);
@@ -1195,7 +1282,7 @@ void updateInterface(void){
 			setColour(LED05, 0, 0, MAXCHANNELVALUE); //Blue
 			setColour(LED06, 0, 0, MAXCHANNELVALUE); //Blue
 
-			//Display the current colour
+			//Display the current colour on CR spaces
 			switch(adjustColourType){
 
 				case PRIMARYCOLOUR:
@@ -1377,7 +1464,7 @@ void checkButton(uint8_t button, uint8_t buttonTimer){
 
 		//When should we consider the button as released, given debounce:
 		if( 
-			   (downButtonTime != 0)
+			   (buttonTimer != 0)
 			&& (
 					   (	//This is the special case where we wrap the integer
 					   		   buttonTimer > buttonTimer+DEBOUNCEBUTTON
@@ -1388,6 +1475,7 @@ void checkButton(uint8_t button, uint8_t buttonTimer){
 				)
 		){
 			buttonTimer = 0;
+			//Reset use status when the button is released!
 			inputUsed &= ~(1<<button);
 		} //if
 
@@ -1401,7 +1489,7 @@ void checkButton(uint8_t button, uint8_t buttonTimer){
 ISR(PCINT2_vect, ISR_ALIASOF(PCINT1_vect));
 ISR(PCINT1_vect){
 
-	//Bit banging magic
+	//Bit banging magic: if button is pressed, 1 is written to buttonStatus
 	buttonStatus &= ~((PINB>>PINB0 ^ 1)<<DOWN);
 	buttonStatus &= ~((PINB>>PINB4 ^ 1)<<LEFT);
 	buttonStatus &= ~((PINB>>PINB5 ^ 1)<<RIGHT);

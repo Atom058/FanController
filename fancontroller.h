@@ -147,6 +147,8 @@
 	#define VIEWCOLOURSETTING 4
 	#define VIEWCOLOURCHANNELSETTING 5
 
+	#define LONGPRESSFORCOLOURDELAY 310
+
 	//Input references
 	#define DOWN 0
 	#define LEFT 1
